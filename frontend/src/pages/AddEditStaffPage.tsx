@@ -14,10 +14,25 @@ export function AddEditStaffPage() {
   const [formData, setFormData] = useState<Partial<Staff>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
   useEffect(() => {
-    if (isEdit) {
-      const staff = mockStaff.find(s => s.id === id);
-      if (staff) setFormData(staff);
-    }
+    const load = async () => {
+      if (!isEdit) return;
+      try {
+        const token = localStorage.getItem('authToken') || localStorage.getItem('mock-auth-token');
+        const res = await fetch(`/api/staff/${id}`, {
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined
+        });
+        if (!res.ok) throw new Error('Failed to fetch staff');
+        const data = await res.json();
+        const normalized = { ...data, id: data._id || data.id };
+        setFormData(normalized);
+        return;
+      } catch (err) {
+        console.error('Failed to load staff', err);
+        const s = mockStaff.find(st => st.id === id);
+        if (s) setFormData(s);
+      }
+    };
+    load();
   }, [id, isEdit]);
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -34,8 +49,32 @@ export function AddEditStaffPage() {
       });
       return;
     }
-    // Mock save
-    navigate('/tec-staff');
+    (async () => {
+      try {
+        const token = localStorage.getItem('authToken') || localStorage.getItem('mock-auth-token');
+        const url = isEdit ? `/api/staff/${id}` : '/api/staff';
+        const method = isEdit ? 'PUT' : 'POST';
+        const body = { ...formData } as any;
+        Object.keys(body).forEach(k => body[k] === undefined && delete body[k]);
+        const res = await fetch(url, {
+          method,
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { Authorization: `Bearer ${token}` } : {})
+          },
+          body: JSON.stringify(body)
+        });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({ message: 'Failed to save staff' }));
+          alert(err.message || 'Failed to save staff');
+          return;
+        }
+        navigate('/tec-staff');
+      } catch (err) {
+        console.error(err);
+        alert('Failed to save staff');
+      }
+    })();
   };
   return <div className="max-w-2xl mx-auto space-y-6">
       <div className="flex items-center gap-4 mb-6">

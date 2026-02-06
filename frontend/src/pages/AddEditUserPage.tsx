@@ -20,12 +20,28 @@ export function AddEditUserPage() {
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   useEffect(() => {
-    if (isEdit) {
-      const user = mockSystemUsers.find(u => u.id === id);
-      if (user) {
-        setFormData(user);
+    const load = async () => {
+      if (!isEdit) return;
+      try {
+        const token = localStorage.getItem('authToken') || localStorage.getItem('mock-auth-token');
+        const res = await fetch(`/api/users/${id}`, {
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined
+        });
+        if (!res.ok) throw new Error('Failed to fetch user');
+        const data = await res.json();
+        const normalized = {
+          ...data,
+          id: data._id || data.id
+        };
+        setFormData(normalized);
+        return;
+      } catch (err) {
+        console.error('Failed to load user', err);
+        const user = mockSystemUsers.find(u => u.id === id);
+        if (user) setFormData(user);
       }
-    }
+    };
+    load();
   }, [id, isEdit]);
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const {
@@ -58,8 +74,33 @@ export function AddEditUserPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (validate()) {
-      console.log('Saving user:', formData);
-      navigate('/users');
+      (async () => {
+        try {
+          const token = localStorage.getItem('authToken') || localStorage.getItem('mock-auth-token');
+          const url = isEdit ? `/api/users/${id}` : '/api/users';
+          const method = isEdit ? 'PUT' : 'POST';
+          const body = { ...formData } as any;
+          // do not send undefined fields
+          Object.keys(body).forEach(k => body[k] === undefined && delete body[k]);
+          const res = await fetch(url, {
+            method,
+            headers: {
+              'Content-Type': 'application/json',
+              ...(token ? { Authorization: `Bearer ${token}` } : {})
+            },
+            body: JSON.stringify(body)
+          });
+          if (!res.ok) {
+            const err = await res.json().catch(() => ({ message: 'Failed to save user' }));
+            alert(err.message || 'Failed to save user');
+            return;
+          }
+          navigate('/users');
+        } catch (err) {
+          console.error(err);
+          alert('Failed to save user');
+        }
+      })();
     }
   };
   return <div className="max-w-2xl mx-auto space-y-6">
