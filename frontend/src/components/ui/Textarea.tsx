@@ -1,4 +1,4 @@
-import React from 'react';
+// React import not required with new JSX transform
 interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
   label?: string;
   error?: string;

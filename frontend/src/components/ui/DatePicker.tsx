@@ -1,4 +1,4 @@
-import React from 'react';
+// React import not required with new JSX transform
 import { CalendarIcon } from 'lucide-react';
 interface DatePickerProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string;

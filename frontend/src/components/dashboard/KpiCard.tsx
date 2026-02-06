@@ -1,9 +1,8 @@
-import React from 'react';
-import { BoxIcon } from 'lucide-react';
+import type { ComponentType } from 'react';
 interface KpiCardProps {
   title: string;
   value: string | number;
-  icon: BoxIcon;
+  icon: ComponentType<any>;
   trend?: string;
   color?: 'blue' | 'green' | 'amber' | 'red';
 }

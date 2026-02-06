@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Download, FileText, FileSpreadsheet, Calendar } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Select } from '../components/ui/Select';
@@ -31,12 +31,12 @@ export function ExportPage() {
     alert('Downloading Final Technical Evaluation Service.docx...');
   };
   return <div className="space-y-6">
-      <div>
+      {/* <div>
         <h2 className="text-2xl font-bold text-slate-900">Export Data</h2>
         <p className="text-slate-500">
           Download system records and technical evaluation documents
         </p>
-      </div>
+      </div> */}
 
       {/* Download System Records */}
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 md:p-8">
@@ -207,7 +207,7 @@ export function ExportPage() {
       </div>
 
       {/* Export Information */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+      {/* <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
         <div className="flex gap-3">
           <div className="flex-shrink-0">
             <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
@@ -236,6 +236,6 @@ export function ExportPage() {
             </ul>
           </div>
         </div>
-      </div>
+      </div> */}
     </div>;
 }
