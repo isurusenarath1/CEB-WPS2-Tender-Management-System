@@ -5,7 +5,7 @@ import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Select } from '../components/ui/Select';
 import { DatePicker } from '../components/ui/DatePicker';
-import { mockBidOpeningCommittees, mockStaff } from '../utils/mockData';
+import { mockStaff } from '../utils/mockData';
 import { BidOpeningCommittee } from '../utils/types';
 export function AddEditCommitteePage() {
   const navigate = useNavigate();
@@ -20,12 +20,26 @@ export function AddEditCommitteePage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [newMember, setNewMember] = useState('');
   useEffect(() => {
-    if (isEdit) {
-      const committee = mockBidOpeningCommittees.find(c => c.id === id);
-      if (committee) {
-        setFormData(committee);
+    const load = async () => {
+      if (!isEdit) return;
+      try {
+        const token = localStorage.getItem('mock-auth-token') || localStorage.getItem('authToken') || localStorage.getItem('token');
+        const res = await fetch(`/api/committees/${id}`, {
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined
+        });
+        if (!res.ok) throw new Error('Failed to fetch');
+        const data = await res.json();
+        const normalized = {
+          ...data,
+          id: data._id || data.id,
+          appointedDate: data.appointedDate ? String(data.appointedDate).slice(0, 10) : ''
+        };
+        setFormData(normalized);
+      } catch (err) {
+        console.error('Failed to load committee from API', err);
       }
-    }
+    };
+    load();
   }, [id, isEdit]);
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const {
@@ -74,8 +88,30 @@ export function AddEditCommitteePage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (validate()) {
-      console.log('Saving committee:', formData);
-      navigate('/bid-opening');
+      (async () => {
+        try {
+          const token = localStorage.getItem('mock-auth-token') || localStorage.getItem('authToken') || localStorage.getItem('token');
+          const url = isEdit ? `/api/committees/${id}` : '/api/committees';
+          const method = isEdit ? 'PUT' : 'POST';
+          const res = await fetch(url, {
+            method,
+            headers: {
+              'Content-Type': 'application/json',
+              ...(token ? { Authorization: `Bearer ${token}` } : {})
+            },
+            body: JSON.stringify(formData)
+          });
+          if (!res.ok) {
+            const err = await res.json().catch(() => ({ message: 'Failed to save' }));
+            alert(err.message || 'Failed to save committee');
+            return;
+          }
+          navigate('/bid-opening');
+        } catch (err) {
+          console.error(err);
+          alert('Failed to save committee');
+        }
+      })();
     }
   };
   const staffOptions = mockStaff.map(s => ({

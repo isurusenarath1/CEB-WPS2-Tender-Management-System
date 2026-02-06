@@ -1,23 +1,63 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Edit2, Trash2 } from 'lucide-react';
 import { DataTable } from '../components/shared/DataTable';
 import { Button } from '../components/ui/Button';
 import { Modal } from '../components/ui/Modal';
 import { Select } from '../components/ui/Select';
-import { mockBidOpeningCommittees } from '../utils/mockData';
 import { BidOpeningCommittee } from '../utils/types';
 export function BidOpeningCommitteePage() {
   const navigate = useNavigate();
-  const [committees, setCommittees] = useState<BidOpeningCommittee[]>(mockBidOpeningCommittees);
+  const [committees, setCommittees] = useState<BidOpeningCommittee[]>([]);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState('All');
   const handleDelete = () => {
-    if (deleteId) {
-      setCommittees(committees.filter(c => c.id !== deleteId));
-      setDeleteId(null);
-    }
+    (async () => {
+      if (!deleteId) return;
+      try {
+        const token = localStorage.getItem('mock-auth-token') || localStorage.getItem('authToken') || localStorage.getItem('token');
+        const res = await fetch(`/api/committees/${deleteId}`, {
+          method: 'DELETE',
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined
+        });
+        if (res.ok) {
+          setCommittees(prev => prev.filter(c => c.id !== deleteId));
+        } else {
+          const err = await res.json().catch(() => ({ message: 'Failed to delete' }));
+          alert(err.message || 'Failed to delete committee');
+        }
+      } catch (err) {
+        console.error(err);
+        alert('Failed to delete committee');
+      } finally {
+        setDeleteId(null);
+      }
+    })();
   };
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const token = localStorage.getItem('mock-auth-token') || localStorage.getItem('authToken') || localStorage.getItem('token');
+        const res = await fetch('/api/committees', {
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const mapped = Array.isArray(data) ? data.map((d: any) => ({
+            ...d,
+            id: d._id || d.id,
+            appointedDate: d.appointedDate ? String(d.appointedDate).slice(0, 10) : ''
+          })) : [];
+          setCommittees(mapped);
+          return;
+        }
+      } catch (err) {
+        console.warn('Failed to load committees from API', err);
+      }
+    };
+    load();
+  }, []);
   const filteredCommittees = committees.filter(committee => {
     return statusFilter === 'All' || committee.status === statusFilter;
   });

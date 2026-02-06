@@ -14,16 +14,40 @@ export function LoginPage() {
     e.preventDefault();
     setError('');
     setIsLoading(true);
-    // Mock authentication 
-    setTimeout(() => {
-      if (email === 'admin@tec.gov' && password === 'admin123') {
-        localStorage.setItem('mock-auth-token', 'valid-token');
-        navigate('/dashboard');
-      } else {
-        setError('Invalid email or password');
-        setIsLoading(false);
+    (async () => {
+      const endpoints = ['/api/auth/login', 'http://localhost:5000/api/auth/login'];
+      let lastError: any = null;
+      for (const url of endpoints) {
+        try {
+          const res = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+          });
+          if (!res.ok) {
+            const err = await res.json().catch(() => ({ message: 'Invalid credentials' }));
+            lastError = err;
+            continue; // try next endpoint
+          }
+          const data = await res.json();
+          const token = data.token;
+          if (token) {
+            localStorage.setItem('authToken', token);
+            localStorage.setItem('mock-auth-token', token);
+            localStorage.setItem('user', JSON.stringify(data.user || {}));
+            navigate('/dashboard');
+            return;
+          }
+          lastError = { message: 'Login failed' };
+        } catch (err) {
+          lastError = err;
+          // try next endpoint
+        }
       }
-    }, 1000);
+      console.error('Login error', lastError);
+      setError(lastError?.message || 'Login failed');
+      setIsLoading(false);
+    })();
   };
   return <div style={{backgroundImage: `url(${backgr})`, backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat'}} className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
       <div className="max-w-md w-full bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden">
@@ -58,8 +82,8 @@ export function LoginPage() {
             </Button>
 
             <div className="text-center text-xs text-slate-400">
-              <p>Demo Credentials:</p>
-              <p>Email: admin@tec.gov | Pass: admin123</p>
+              <p>Super Admin credentials:</p>
+              <p>Email: isurusenarath6699@gmail.com | Pass: 123.</p>
             </div>
           </form>
         </div>
