@@ -1,4 +1,4 @@
-import React from 'react';
+// React import not required with new JSX transform
 import { FileText, Clock, CheckCircle, AlertCircle } from 'lucide-react';
 import { KpiCard } from '../components/dashboard/KpiCard';
 import { PieChart } from '../components/dashboard/PieChart';

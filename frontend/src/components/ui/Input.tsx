@@ -1,4 +1,4 @@
-import React from 'react';
+// React import not required with new JSX transform
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string;
   error?: string;

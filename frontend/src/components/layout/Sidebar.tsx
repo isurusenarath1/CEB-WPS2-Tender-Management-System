@@ -1,4 +1,4 @@
-import React from 'react';
+// React not required with the new JSX transform
 import { NavLink, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, FileText, Plus, Users, UserPlus, Building2, Download, LogOut, Menu, FolderOpen, Briefcase, Gavel, Shield, FileSearch } from 'lucide-react';
 interface SidebarProps {
@@ -131,7 +131,7 @@ export function Sidebar({
         {/* Logo Area - Fixed at top */}
         <div className="flex items-center justify-between h-16 px-6 bg-slate-950 flex-shrink-0">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+            <div className="w-8 h-8 bg-[#bd5d2a] rounded-lg flex items-center justify-center">
               <FileText className="w-5 h-5 text-white" />
             </div>
             <span className="text-lg font-bold tracking-tight">TEC Admin</span>
@@ -148,7 +148,7 @@ export function Sidebar({
             isActive
           }) => `
                     flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors
-                    ${isActive ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'text-slate-400 hover:text-white hover:bg-slate-800'}
+                    ${isActive ? 'bg-[#bd5d2a] text-white shadow-lg shadow-[0_10px_15px_-3px_rgba(189,93,42,0.2)]' : 'text-slate-400 hover:text-white hover:bg-slate-800'}
                   `}>
                   {item.icon}
                   {item.title}
@@ -160,7 +160,7 @@ export function Sidebar({
               isActive
             }) => `
                         flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ml-2
-                        ${isActive ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'text-slate-400 hover:text-white hover:bg-slate-800'}
+                        ${isActive ? 'bg-[#bd5d2a] text-white shadow-lg shadow-[0_10px_15px_-3px_rgba(189,93,42,0.2)]' : 'text-slate-400 hover:text-white hover:bg-slate-800'}
                       `}>
                       {subItem.icon}
                       {subItem.title}

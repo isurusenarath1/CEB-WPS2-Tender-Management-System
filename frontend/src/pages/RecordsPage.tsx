@@ -1,14 +1,14 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Eye, Edit2, Trash2, Plus } from 'lucide-react';
+import { Edit2, Trash2, Plus } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Select } from '../components/ui/Select';
 import { Modal } from '../components/ui/Modal';
 import { mockRecords } from '../utils/mockData';
-import { Record } from '../utils/types';
+import { Record as TmsRecord } from '../utils/types';
 export function RecordsPage() {
   const navigate = useNavigate();
-  const [records, setRecords] = useState<Record[]>(mockRecords);
+  const [records, setRecords] = useState<TmsRecord[]>(mockRecords);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState('All');
   const [categoryFilter, setCategoryFilter] = useState('All');

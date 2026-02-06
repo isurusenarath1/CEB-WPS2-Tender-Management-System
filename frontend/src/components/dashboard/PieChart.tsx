@@ -1,4 +1,4 @@
-import React from 'react';
+// React import not required with new JSX transform
 import { PieChart as RePieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 interface DataPoint {
   name: string;
