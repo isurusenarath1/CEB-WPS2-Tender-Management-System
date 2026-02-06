@@ -1,4 +1,4 @@
-import React from 'react';
+// React import not required with new JSX transform
 interface SelectOption {
   value: string;
   label: string;

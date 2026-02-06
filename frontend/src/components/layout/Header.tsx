@@ -1,4 +1,4 @@
-import React from 'react';
+// React import not required with new JSX transform
 import { Menu, Bell, User } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 interface HeaderProps {
@@ -33,10 +33,10 @@ export function Header({
       </div>
 
       <div className="flex items-center gap-4">
-        <button className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full relative">
+        {/* <button className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full relative">
           <Bell className="w-5 h-5" />
           <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
-        </button>
+        </button> */}
         <div className="flex items-center gap-3 pl-4 border-l border-slate-200">
           <div className="text-right hidden sm:block">
             <p className="text-sm font-medium text-slate-900">Admin User</p>
