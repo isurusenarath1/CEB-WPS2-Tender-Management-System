@@ -1,4 +1,4 @@
-import React from 'react';
+// React import not required with new JSX transform
 import { BrowserRouter as Router, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { MainLayout } from './components/layout/MainLayout';
 import { LoginPage } from './pages/LoginPage';

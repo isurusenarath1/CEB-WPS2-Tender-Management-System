@@ -1,7 +1,5 @@
-import React, { useState } from 'react';
-import { ChevronLeft, ChevronRight, Search, ArrowUpDown } from 'lucide-react';
-import { Input } from '../ui/Input';
-import { Select } from '../ui/Select';
+import { useState } from 'react';
+import { ChevronLeft, ChevronRight, Search } from 'lucide-react';
 interface Column<T> {
   header: string;
   accessorKey: keyof T | ((item: T) => React.ReactNode);

@@ -1,4 +1,4 @@
-import React from 'react';
+// React import not required with new JSX transform
 import { BarChart as ReBarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 interface DataPoint {
   name: string;
