@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FileText, Lock, Mail } from 'lucide-react';
+import { FileText, Lock, Mail, Shield } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
+import backgr from '../assets/backgr.png';
 export function LoginPage() {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
@@ -13,7 +14,7 @@ export function LoginPage() {
     e.preventDefault();
     setError('');
     setIsLoading(true);
-    // Mock authentication
+    // Mock authentication 
     setTimeout(() => {
       if (email === 'admin@tec.gov' && password === 'admin123') {
         localStorage.setItem('mock-auth-token', 'valid-token');
@@ -24,11 +25,11 @@ export function LoginPage() {
       }
     }, 1000);
   };
-  return <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+  return <div style={{backgroundImage: `url(${backgr})`, backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat'}} className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
       <div className="max-w-md w-full bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden">
-        <div className="bg-blue-600 p-8 text-center">
+        <div className="bg-amber-700 p-8 text-center">
           <div className="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center mx-auto mb-4 backdrop-blur-sm">
-            <FileText className="w-8 h-8 text-white" />
+            <Shield className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-2xl font-bold text-white">TEC Admin Portal</h1>
           <p className="text-blue-100 mt-2">Sign in to manage tender records</p>
