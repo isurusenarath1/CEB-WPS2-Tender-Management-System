@@ -5,7 +5,6 @@ import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Select } from '../components/ui/Select';
 import { DatePicker } from '../components/ui/DatePicker';
-import { mockStaff } from '../utils/mockData';
 import { BidOpeningCommittee } from '../utils/types';
 export function AddEditCommitteePage() {
   const navigate = useNavigate();
@@ -19,6 +18,7 @@ export function AddEditCommitteePage() {
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [newMember, setNewMember] = useState('');
+  const [staffList, setStaffList] = useState<{ name: string; id: string }[]>([]);
   useEffect(() => {
     const load = async () => {
       if (!isEdit) return;
@@ -41,6 +41,24 @@ export function AddEditCommitteePage() {
     };
     load();
   }, [id, isEdit]);
+
+  useEffect(() => {
+    const loadStaff = async () => {
+      try {
+        const token = localStorage.getItem('authToken') || localStorage.getItem('mock-auth-token') || localStorage.getItem('token');
+        const res = await fetch('/api/staff', {
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined
+        });
+        if (!res.ok) throw new Error('Failed to fetch staff');
+        const data = await res.json();
+        const mapped = Array.isArray(data) ? data.map((s: any) => ({ id: s._id || s.id, name: s.name })) : [];
+        setStaffList(mapped);
+      } catch (err) {
+        console.error('Failed to load staff list', err);
+      }
+    };
+    loadStaff();
+  }, []);
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const {
       name,
@@ -114,10 +132,7 @@ export function AddEditCommitteePage() {
       })();
     }
   };
-  const staffOptions = mockStaff.map(s => ({
-    value: s.name,
-    label: s.name
-  }));
+  const staffOptions = staffList.map(s => ({ value: s.name, label: s.name }));
   return <div className="max-w-3xl mx-auto space-y-6">
       <div className="flex items-center gap-4 mb-6">
         <button onClick={() => navigate('/bid-opening')} className="p-2 hover:bg-slate-100 rounded-full transition-colors">

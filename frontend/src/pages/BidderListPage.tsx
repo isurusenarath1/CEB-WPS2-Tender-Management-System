@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Edit2, Trash2 } from 'lucide-react';
 import { DataTable } from '../components/shared/DataTable';
@@ -8,14 +8,50 @@ import { mockBidders } from '../utils/mockData';
 import { Bidder } from '../utils/types';
 export function BidderListPage() {
   const navigate = useNavigate();
-  const [bidders, setBidders] = useState<Bidder[]>(mockBidders);
+  const [bidders, setBidders] = useState<Bidder[]>([]);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const handleDelete = () => {
-    if (deleteId) {
-      setBidders(bidders.filter(b => b.id !== deleteId));
-      setDeleteId(null);
-    }
+    (async () => {
+      if (!deleteId) return;
+      try {
+        const token = localStorage.getItem('authToken') || localStorage.getItem('mock-auth-token');
+        const res = await fetch(`/api/bidders/${deleteId}`, {
+          method: 'DELETE',
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined
+        });
+        if (res.ok) {
+          setBidders(prev => prev.filter(b => b.id !== deleteId));
+        } else {
+          const err = await res.json().catch(() => ({ message: 'Failed to delete' }));
+          alert(err.message || 'Failed to delete bidder');
+        }
+      } catch (err) {
+        console.error(err);
+        alert('Failed to delete bidder');
+      } finally {
+        setDeleteId(null);
+      }
+    })();
   };
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const token = localStorage.getItem('authToken') || localStorage.getItem('mock-auth-token');
+        const res = await fetch('/api/bidders', {
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined
+        });
+        if (!res.ok) throw new Error('Failed to fetch bidders');
+        const data = await res.json();
+        const mapped = Array.isArray(data) ? data.map((b: any) => ({ ...b, id: b._id || b.id })) : [];
+        setBidders(mapped);
+      } catch (err) {
+        console.error('Failed to load bidders', err);
+        setBidders(mockBidders);
+      }
+    };
+    load();
+  }, []);
   const columns = [{
     header: 'Company Name',
     accessorKey: 'name' as keyof Bidder

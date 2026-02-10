@@ -16,8 +16,26 @@ export function AddEditBidderPage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   useEffect(() => {
     if (isEdit) {
-      const bidder = mockBidders.find(b => b.id === id);
-      if (bidder) setFormData(bidder);
+      (async () => {
+        try {
+          const token = localStorage.getItem('authToken') || localStorage.getItem('mock-auth-token');
+          const res = await fetch(`/api/bidders/${id}`, {
+            headers: token ? { Authorization: `Bearer ${token}` } : undefined
+          });
+          if (!res.ok) {
+            // fallback to mock
+            const bidder = mockBidders.find(b => b.id === id);
+            if (bidder) setFormData(bidder);
+            return;
+          }
+          const data = await res.json();
+          setFormData({ ...data, id: data._id || data.id });
+        } catch (err) {
+          console.error('Failed to load bidder', err);
+          const bidder = mockBidders.find(b => b.id === id);
+          if (bidder) setFormData(bidder);
+        }
+      })();
     }
   }, [id, isEdit]);
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -35,7 +53,36 @@ export function AddEditBidderPage() {
       });
       return;
     }
-    navigate('/bidders');
+    (async () => {
+      try {
+        const token = localStorage.getItem('authToken') || localStorage.getItem('mock-auth-token');
+        const payload = {
+          name: formData.name,
+          email: formData.email,
+          contact: formData.contact,
+          address: formData.address
+        };
+        const url = isEdit ? `/api/bidders/${id}` : '/api/bidders';
+        const method = isEdit ? 'PUT' : 'POST';
+        const res = await fetch(url, {
+          method,
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { Authorization: `Bearer ${token}` } : {})
+          },
+          body: JSON.stringify(payload)
+        });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({ message: 'Failed to save' }));
+          alert(err.message || 'Failed to save bidder');
+          return;
+        }
+        navigate('/bidders');
+      } catch (err) {
+        console.error(err);
+        alert('Failed to save bidder');
+      }
+    })();
   };
   return <div className="max-w-2xl mx-auto space-y-6">
       <div className="flex items-center gap-4 mb-6">
