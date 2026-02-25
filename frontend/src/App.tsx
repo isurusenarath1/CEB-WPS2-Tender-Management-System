@@ -21,7 +21,7 @@ import { AddEditUserPage } from './pages/AddEditUserPage';
 import { AuditLogPage } from './pages/AuditLogPage';
 // Protected Route Wrapper
 const ProtectedRoute = () => {
-  const isAuthenticated = localStorage.getItem('mock-auth-token');
+  const isAuthenticated = sessionStorage.getItem('mock-auth-token');
   return isAuthenticated ? <MainLayout>
       <Outlet />
     </MainLayout> : <Navigate to="/login" replace />;

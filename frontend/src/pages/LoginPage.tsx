@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FileText, Lock, Mail, Shield } from 'lucide-react';
+import { Lock, Mail, Shield } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import backgr from '../assets/backgr.png';
@@ -32,9 +32,13 @@ export function LoginPage() {
           const data = await res.json();
           const token = data.token;
           if (token) {
-            localStorage.setItem('authToken', token);
-            localStorage.setItem('mock-auth-token', token);
-            localStorage.setItem('user', JSON.stringify(data.user || {}));
+            sessionStorage.setItem('authToken', token);
+            sessionStorage.setItem('mock-auth-token', token);
+            sessionStorage.setItem('user', JSON.stringify(data.user || {}));
+            // Clear legacy localStorage to avoid confusion
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('mock-auth-token');
+            localStorage.removeItem('user');
             navigate('/dashboard');
             return;
           }
@@ -55,7 +59,7 @@ export function LoginPage() {
           <div className="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center mx-auto mb-4 backdrop-blur-sm">
             <Shield className="w-8 h-8 text-white" />
           </div>
-          <h1 className="text-2xl font-bold text-white">TEC Admin Portal</h1>
+          <h1 className="text-2xl font-bold text-white">Tender Management System</h1>
           <p className="text-blue-100 mt-2">Sign in to manage tender records</p>
         </div>
 

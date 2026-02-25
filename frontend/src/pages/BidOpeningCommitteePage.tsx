@@ -15,7 +15,7 @@ export function BidOpeningCommitteePage() {
     (async () => {
       if (!deleteId) return;
       try {
-        const token = localStorage.getItem('mock-auth-token') || localStorage.getItem('authToken') || localStorage.getItem('token');
+        const token = sessionStorage.getItem('mock-auth-token') || sessionStorage.getItem('authToken') || sessionStorage.getItem('token');
         const res = await fetch(`/api/committees/${deleteId}`, {
           method: 'DELETE',
           headers: token ? { Authorization: `Bearer ${token}` } : undefined
@@ -38,7 +38,7 @@ export function BidOpeningCommitteePage() {
   useEffect(() => {
     const load = async () => {
       try {
-        const token = localStorage.getItem('mock-auth-token') || localStorage.getItem('authToken') || localStorage.getItem('token');
+        const token = sessionStorage.getItem('mock-auth-token') || sessionStorage.getItem('authToken') || sessionStorage.getItem('token');
         const res = await fetch('/api/committees', {
           headers: token ? { Authorization: `Bearer ${token}` } : undefined
         });
@@ -110,10 +110,10 @@ export function BidOpeningCommitteePage() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h2 className="text-2xl font-bold text-slate-900">
-            Bid Opening Committee
+            TEC Committee
           </h2>
           <p className="text-slate-500">
-            Manage bid opening committee members and appointments
+            Manage TEC committee members and appointments
           </p>
         </div>
         <Button onClick={() => navigate('/bid-opening/add')} leftIcon={<Plus className="w-4 h-4" />}>

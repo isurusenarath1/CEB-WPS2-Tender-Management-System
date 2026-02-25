@@ -1,23 +1,64 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Edit2, Trash2 } from 'lucide-react';
 import { DataTable } from '../components/shared/DataTable';
 import { Button } from '../components/ui/Button';
 import { Modal } from '../components/ui/Modal';
 import { Select } from '../components/ui/Select';
-import { mockCategories } from '../utils/mockData';
 import { CategoryItem } from '../utils/types';
+
 export function CategoryListPage() {
   const navigate = useNavigate();
-  const [categories, setCategories] = useState<CategoryItem[]>(mockCategories);
+  const [categories, setCategories] = useState<CategoryItem[]>([]);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState('All');
+
   const handleDelete = () => {
-    if (deleteId) {
-      setCategories(categories.filter(c => c.id !== deleteId));
-      setDeleteId(null);
-    }
+    (async () => {
+      if (!deleteId) return;
+      try {
+        const token = sessionStorage.getItem('authToken') || sessionStorage.getItem('mock-auth-token');
+        const res = await fetch(`/api/categories/${deleteId}`, {
+          method: 'DELETE',
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined
+        });
+        if (res.ok) {
+          setCategories(prev => prev.filter(c => c.id !== deleteId));
+        } else {
+          const err = await res.json().catch(() => ({ message: 'Failed to delete' }));
+          alert(err.message || 'Failed to delete category');
+        }
+      } catch (err) {
+        console.error(err);
+        alert('Failed to delete category');
+      } finally {
+        setDeleteId(null);
+      }
+    })();
   };
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const token = sessionStorage.getItem('authToken') || sessionStorage.getItem('mock-auth-token');
+        const res = await fetch('/api/categories', {
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const mapped = Array.isArray(data) ? data.map((c: any) => ({ 
+            ...c, 
+            id: c._id || c.id,
+            createdDate: c.createdAt ? String(c.createdAt).slice(0, 10) : ''
+          })) : [];
+          setCategories(mapped);
+        }
+      } catch (err) {
+        console.error('Failed to load categories', err);
+      }
+    };
+    load();
+  }, []);
   const filteredCategories = categories.filter(category => {
     return statusFilter === 'All' || category.status === statusFilter;
   });

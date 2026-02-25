@@ -23,7 +23,7 @@ export function AddEditCommitteePage() {
     const load = async () => {
       if (!isEdit) return;
       try {
-        const token = localStorage.getItem('mock-auth-token') || localStorage.getItem('authToken') || localStorage.getItem('token');
+        const token = sessionStorage.getItem('mock-auth-token') || sessionStorage.getItem('authToken') || sessionStorage.getItem('token');
         const res = await fetch(`/api/committees/${id}`, {
           headers: token ? { Authorization: `Bearer ${token}` } : undefined
         });
@@ -45,7 +45,7 @@ export function AddEditCommitteePage() {
   useEffect(() => {
     const loadStaff = async () => {
       try {
-        const token = localStorage.getItem('authToken') || localStorage.getItem('mock-auth-token') || localStorage.getItem('token');
+        const token = sessionStorage.getItem('authToken') || sessionStorage.getItem('mock-auth-token') || sessionStorage.getItem('token');
         const res = await fetch('/api/staff', {
           headers: token ? { Authorization: `Bearer ${token}` } : undefined
         });
@@ -108,7 +108,7 @@ export function AddEditCommitteePage() {
     if (validate()) {
       (async () => {
         try {
-          const token = localStorage.getItem('mock-auth-token') || localStorage.getItem('authToken') || localStorage.getItem('token');
+          const token = sessionStorage.getItem('mock-auth-token') || sessionStorage.getItem('authToken') || sessionStorage.getItem('token');
           const url = isEdit ? `/api/committees/${id}` : '/api/committees';
           const method = isEdit ? 'PUT' : 'POST';
           const res = await fetch(url, {

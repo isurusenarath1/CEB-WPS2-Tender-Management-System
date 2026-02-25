@@ -6,7 +6,6 @@ import { DataTable } from '../components/shared/DataTable';
 import { Button } from '../components/ui/Button';
 import { Modal } from '../components/ui/Modal';
 import { Select } from '../components/ui/Select';
-import { mockSystemUsers } from '../utils/mockData';
 import { SystemUser } from '../utils/types';
 export function UserManagementPage() {
   const navigate = useNavigate();
@@ -18,7 +17,7 @@ export function UserManagementPage() {
     (async () => {
       if (!deleteId) return;
       try {
-        const token = localStorage.getItem('authToken') || localStorage.getItem('mock-auth-token');
+        const token = sessionStorage.getItem('authToken') || sessionStorage.getItem('mock-auth-token');
         const res = await fetch(`/api/users/${deleteId}`, {
           method: 'DELETE',
           headers: token ? { Authorization: `Bearer ${token}` } : undefined
@@ -41,7 +40,7 @@ export function UserManagementPage() {
   useEffect(() => {
     const load = async () => {
       try {
-        const token = localStorage.getItem('authToken') || localStorage.getItem('mock-auth-token');
+        const token = sessionStorage.getItem('authToken') || sessionStorage.getItem('mock-auth-token');
         const res = await fetch('/api/users', {
           headers: token ? { Authorization: `Bearer ${token}` } : undefined
         });
@@ -56,8 +55,8 @@ export function UserManagementPage() {
         setUsers(mapped);
       } catch (err) {
         console.error('Failed to load users', err);
-        // fall back to mock data for dev if desired
-        setUsers(mockSystemUsers);
+        // fall back to empty array
+        setUsers([]);
       }
     };
     load();

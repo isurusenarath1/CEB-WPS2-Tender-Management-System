@@ -4,7 +4,6 @@ import { ArrowLeft, Save } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Select } from '../components/ui/Select';
-import { mockSystemUsers } from '../utils/mockData';
 import { SystemUser } from '../utils/types';
 export function AddEditUserPage() {
   const navigate = useNavigate();
@@ -23,7 +22,7 @@ export function AddEditUserPage() {
     const load = async () => {
       if (!isEdit) return;
       try {
-        const token = localStorage.getItem('authToken') || localStorage.getItem('mock-auth-token');
+        const token = sessionStorage.getItem('authToken') || sessionStorage.getItem('mock-auth-token');
         const res = await fetch(`/api/users/${id}`, {
           headers: token ? { Authorization: `Bearer ${token}` } : undefined
         });
@@ -37,8 +36,6 @@ export function AddEditUserPage() {
         return;
       } catch (err) {
         console.error('Failed to load user', err);
-        const user = mockSystemUsers.find(u => u.id === id);
-        if (user) setFormData(user);
       }
     };
     load();
@@ -76,7 +73,7 @@ export function AddEditUserPage() {
     if (validate()) {
       (async () => {
         try {
-          const token = localStorage.getItem('authToken') || localStorage.getItem('mock-auth-token');
+          const token = sessionStorage.getItem('authToken') || sessionStorage.getItem('mock-auth-token');
           const url = isEdit ? `/api/users/${id}` : '/api/users';
           const method = isEdit ? 'PUT' : 'POST';
           const body = { ...formData } as any;

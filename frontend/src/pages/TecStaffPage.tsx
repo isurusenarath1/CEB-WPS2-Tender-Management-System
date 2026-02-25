@@ -4,7 +4,6 @@ import { Plus, Edit2, Trash2 } from 'lucide-react';
 import { DataTable } from '../components/shared/DataTable';
 import { Button } from '../components/ui/Button';
 import { Modal } from '../components/ui/Modal';
-import { mockStaff } from '../utils/mockData';
 import { Staff } from '../utils/types';
 export function TecStaffPage() {
   const navigate = useNavigate();
@@ -14,7 +13,7 @@ export function TecStaffPage() {
     (async () => {
       if (!deleteId) return;
       try {
-        const token = localStorage.getItem('authToken') || localStorage.getItem('mock-auth-token');
+        const token = sessionStorage.getItem('authToken') || sessionStorage.getItem('mock-auth-token');
         const res = await fetch(`/api/staff/${deleteId}`, {
           method: 'DELETE',
           headers: token ? { Authorization: `Bearer ${token}` } : undefined
@@ -37,7 +36,7 @@ export function TecStaffPage() {
   useEffect(() => {
     const load = async () => {
       try {
-        const token = localStorage.getItem('authToken') || localStorage.getItem('mock-auth-token');
+        const token = sessionStorage.getItem('authToken') || sessionStorage.getItem('mock-auth-token');
         const res = await fetch('/api/staff', {
           headers: token ? { Authorization: `Bearer ${token}` } : undefined
         });
@@ -50,7 +49,7 @@ export function TecStaffPage() {
         setStaff(mapped);
       } catch (err) {
         console.error('Failed to load staff', err);
-        setStaff(mockStaff);
+        setStaff([]);
       }
     };
     load();

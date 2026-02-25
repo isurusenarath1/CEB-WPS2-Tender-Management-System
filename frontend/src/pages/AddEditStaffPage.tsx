@@ -3,7 +3,6 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Save } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
-import { mockStaff } from '../utils/mockData';
 import { Staff } from '../utils/types';
 export function AddEditStaffPage() {
   const navigate = useNavigate();
@@ -17,7 +16,7 @@ export function AddEditStaffPage() {
     const load = async () => {
       if (!isEdit) return;
       try {
-        const token = localStorage.getItem('authToken') || localStorage.getItem('mock-auth-token');
+        const token = sessionStorage.getItem('authToken') || sessionStorage.getItem('mock-auth-token');
         const res = await fetch(`/api/staff/${id}`, {
           headers: token ? { Authorization: `Bearer ${token}` } : undefined
         });
@@ -28,8 +27,6 @@ export function AddEditStaffPage() {
         return;
       } catch (err) {
         console.error('Failed to load staff', err);
-        const s = mockStaff.find(st => st.id === id);
-        if (s) setFormData(s);
       }
     };
     load();
@@ -51,7 +48,7 @@ export function AddEditStaffPage() {
     }
     (async () => {
       try {
-        const token = localStorage.getItem('authToken') || localStorage.getItem('mock-auth-token');
+        const token = sessionStorage.getItem('authToken') || sessionStorage.getItem('mock-auth-token');
         const url = isEdit ? `/api/staff/${id}` : '/api/staff';
         const method = isEdit ? 'PUT' : 'POST';
         const body = { ...formData } as any;

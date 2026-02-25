@@ -4,7 +4,6 @@ import { Plus, Edit2, Trash2 } from 'lucide-react';
 import { DataTable } from '../components/shared/DataTable';
 import { Button } from '../components/ui/Button';
 import { Modal } from '../components/ui/Modal';
-import { mockBidders } from '../utils/mockData';
 import { Bidder } from '../utils/types';
 export function BidderListPage() {
   const navigate = useNavigate();
@@ -14,7 +13,7 @@ export function BidderListPage() {
     (async () => {
       if (!deleteId) return;
       try {
-        const token = localStorage.getItem('authToken') || localStorage.getItem('mock-auth-token');
+        const token = sessionStorage.getItem('authToken') || sessionStorage.getItem('mock-auth-token');
         const res = await fetch(`/api/bidders/${deleteId}`, {
           method: 'DELETE',
           headers: token ? { Authorization: `Bearer ${token}` } : undefined
@@ -23,11 +22,11 @@ export function BidderListPage() {
           setBidders(prev => prev.filter(b => b.id !== deleteId));
         } else {
           const err = await res.json().catch(() => ({ message: 'Failed to delete' }));
-          alert(err.message || 'Failed to delete bidder');
+          alert(err.message || 'Failed to delete supplier');
         }
       } catch (err) {
         console.error(err);
-        alert('Failed to delete bidder');
+        alert('Failed to delete supplier');
       } finally {
         setDeleteId(null);
       }
@@ -37,17 +36,17 @@ export function BidderListPage() {
   useEffect(() => {
     const load = async () => {
       try {
-        const token = localStorage.getItem('authToken') || localStorage.getItem('mock-auth-token');
+        const token = sessionStorage.getItem('authToken') || sessionStorage.getItem('mock-auth-token');
         const res = await fetch('/api/bidders', {
           headers: token ? { Authorization: `Bearer ${token}` } : undefined
         });
-        if (!res.ok) throw new Error('Failed to fetch bidders');
+        if (!res.ok) throw new Error('Failed to fetch supplier');
         const data = await res.json();
         const mapped = Array.isArray(data) ? data.map((b: any) => ({ ...b, id: b._id || b.id })) : [];
         setBidders(mapped);
       } catch (err) {
-        console.error('Failed to load bidders', err);
-        setBidders(mockBidders);
+        console.error('Failed to load supplier', err);
+        setBidders([]);
       }
     };
     load();
@@ -80,20 +79,20 @@ export function BidderListPage() {
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-2xl font-bold text-slate-900">
-            Registered Bidders
+            Registered suppliers (bidder)
           </h2>
           <p className="text-slate-500">
-            Manage supplier and bidder information
+            Manage supplier (bidder) information
           </p>
         </div>
         <Button onClick={() => navigate('/bidders/add')} leftIcon={<Plus className="w-4 h-4" />}>
-          Add Bidder
+          Add supplier
         </Button>
       </div>
 
-      <DataTable data={bidders} columns={columns} searchKey="name" searchPlaceholder="Search bidders..." />
+      <DataTable data={bidders} columns={columns} searchKey="name" searchPlaceholder="Search suppliers..." />
 
-      <Modal isOpen={!!deleteId} onClose={() => setDeleteId(null)} title="Remove Bidder" footer={<>
+      <Modal isOpen={!!deleteId} onClose={() => setDeleteId(null)} title="Remove Supplier" footer={<>
             <Button variant="ghost" onClick={() => setDeleteId(null)}>
               Cancel
             </Button>
@@ -102,7 +101,7 @@ export function BidderListPage() {
             </Button>
           </>}>
         <p className="text-slate-600">
-          Are you sure you want to remove this bidder?
+          Are you sure you want to remove this supplier?
         </p>
       </Modal>
     </div>;

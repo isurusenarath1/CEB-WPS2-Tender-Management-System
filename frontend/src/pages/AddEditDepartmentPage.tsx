@@ -5,26 +5,37 @@ import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Select } from '../components/ui/Select';
 import { Textarea } from '../components/ui/Textarea';
-import { mockDepartments } from '../utils/mockData';
 import { Department } from '../utils/types';
+
 export function AddEditDepartmentPage() {
   const navigate = useNavigate();
-  const {
-    id
-  } = useParams();
+  const { id } = useParams();
   const isEdit = !!id;
+  
   const [formData, setFormData] = useState<Partial<Department>>({
     status: 'Active'
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+
   useEffect(() => {
     if (isEdit) {
-      const department = mockDepartments.find(d => d.id === id);
-      if (department) {
-        setFormData(department);
-      }
+      (async () => {
+        try {
+          const token = sessionStorage.getItem('authToken') || sessionStorage.getItem('mock-auth-token');
+          const res = await fetch(`/api/departments/${id}`, {
+            headers: token ? { Authorization: `Bearer ${token}` } : undefined
+          });
+          if (res.ok) {
+            const data = await res.json();
+            setFormData({ ...data, id: data._id || data.id });
+          }
+        } catch (err) {
+          console.error('Failed to load department', err);
+        }
+      })();
     }
   }, [id, isEdit]);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const {
       name,
@@ -44,6 +55,7 @@ export function AddEditDepartmentPage() {
       });
     }
   };
+
   const validate = () => {
     const newErrors: Record<string, string> = {};
     if (!formData.name) newErrors.name = 'Department name is required';
@@ -53,12 +65,34 @@ export function AddEditDepartmentPage() {
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (validate()) {
-      // In a real app, API call here
-      console.log('Saving department:', formData);
-      navigate('/departments');
+      (async () => {
+        try {
+          const token = sessionStorage.getItem('authToken') || sessionStorage.getItem('mock-auth-token');
+          const url = isEdit ? `/api/departments/${id}` : '/api/departments';
+          const method = isEdit ? 'PUT' : 'POST';
+          const res = await fetch(url, {
+            method,
+            headers: {
+              'Content-Type': 'application/json',
+              ...(token ? { Authorization: `Bearer ${token}` } : {})
+            },
+            body: JSON.stringify(formData)
+          });
+          if (!res.ok) {
+            const err = await res.json().catch(() => ({ message: 'Failed to save department' }));
+            setErrors({ submit: err.message || 'Failed to save department' });
+            return;
+          }
+          navigate('/departments');
+        } catch (err) {
+          console.error(err);
+          alert('Failed to save department');
+        }
+      })();
     }
   };
   return <div className="max-w-2xl mx-auto space-y-6">
@@ -77,6 +111,11 @@ export function AddEditDepartmentPage() {
       </div>
 
       <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 md:p-8">
+        {errors.submit && (
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-600 rounded-lg text-sm">
+            {errors.submit}
+          </div>
+        )}
         <div className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Input label="Department Name" name="name" value={formData.name || ''} onChange={handleChange} error={errors.name} placeholder="e.g. IT Department" />

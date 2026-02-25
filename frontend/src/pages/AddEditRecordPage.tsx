@@ -6,25 +6,76 @@ import { Input } from '../components/ui/Input';
 import { Select } from '../components/ui/Select';
 import { Textarea } from '../components/ui/Textarea';
 import { DatePicker } from '../components/ui/DatePicker';
-import { mockRecords, mockDepartments, mockCategories, mockStaff, mockBidders } from '../utils/mockData';
-import { Record as TmsRecord } from '../utils/types';
+import { Record as TmsRecord, Department, CategoryItem, Staff, Bidder } from '../utils/types';
+
 export function AddEditRecordPage() {
   const navigate = useNavigate();
-  const {
-    id
-  } = useParams();
+  const { id } = useParams();
   const isEdit = !!id;
+  
   const [formData, setFormData] = useState<Partial<TmsRecord>>({
     status: 'Under Evacuation'
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+  
+  // Data for dropdowns
+  const [departments, setDepartments] = useState<Department[]>([]);
+  const [categories, setCategories] = useState<CategoryItem[]>([]);
+  const [staff, setStaff] = useState<Staff[]>([]);
+  const [bidders, setBidders] = useState<Bidder[]>([]);
+
   useEffect(() => {
-    if (isEdit) {
-      const record = mockRecords.find(r => r.id === id);
-      if (record) {
-        setFormData(record);
+    const loadDropdownData = async () => {
+      try {
+        const token = sessionStorage.getItem('authToken') || sessionStorage.getItem('mock-auth-token');
+        const h = { headers: token ? { Authorization: `Bearer ${token}` } : undefined };
+        
+        const [depRes, catRes, staffRes, bidderRes] = await Promise.all([
+          fetch('/api/departments', h),
+          fetch('/api/categories', h),
+          fetch('/api/staff', h),
+          fetch('/api/bidders', h)
+        ]);
+
+        if (depRes.ok) setDepartments(await depRes.json());
+        if (catRes.ok) setCategories(await catRes.json());
+        if (staffRes.ok) setStaff(await staffRes.json());
+        if (bidderRes.ok) setBidders(await bidderRes.json());
+      } catch (err) {
+        console.error('Failed to load dropdown data', err);
       }
-    }
+    };
+
+    const loadRecord = async () => {
+      if (!isEdit) return;
+      try {
+        const token = sessionStorage.getItem('authToken') || sessionStorage.getItem('mock-auth-token');
+        const res = await fetch(`/api/records/${id}`, {
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setFormData({
+            ...data,
+            id: data._id || data.id,
+            bidStartDate: data.bidStartDate ? String(data.bidStartDate).slice(0, 10) : '',
+            bidOpenDate: data.bidOpenDate ? String(data.bidOpenDate).slice(0, 10) : '',
+            bidClosingDate: data.bidClosingDate ? String(data.bidClosingDate).slice(0, 10) : '',
+            approvedDate: data.approvedDate ? String(data.approvedDate).slice(0, 10) : '',
+            fileSentToTecDate: data.fileSentToTecDate ? String(data.fileSentToTecDate).slice(0, 10) : '',
+            fileSentToTecSecondTime: data.fileSentToTecSecondTime ? String(data.fileSentToTecSecondTime).slice(0, 10) : '',
+            bidValidityPeriod: data.bidValidityPeriod ? String(data.bidValidityPeriod).slice(0, 10) : '',
+            serviceAgreementStartDate: data.serviceAgreementStartDate ? String(data.serviceAgreementStartDate).slice(0, 10) : '',
+            serviceAgreementEndDate: data.serviceAgreementEndDate ? String(data.serviceAgreementEndDate).slice(0, 10) : ''
+          });
+        }
+      } catch (err) {
+        console.error('Failed to load record', err);
+      }
+    };
+
+    loadDropdownData();
+    loadRecord();
   }, [id, isEdit]);
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const {
@@ -64,27 +115,53 @@ export function AddEditRecordPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (validate()) {
-      console.log('Saving record:', formData);
-      navigate('/records');
+      (async () => {
+        try {
+          const token = sessionStorage.getItem('authToken') || sessionStorage.getItem('mock-auth-token');
+          const url = isEdit ? `/api/records/${id}` : '/api/records';
+          const method = isEdit ? 'PUT' : 'POST';
+          const res = await fetch(url, {
+            method,
+            headers: {
+              'Content-Type': 'application/json',
+              ...(token ? { Authorization: `Bearer ${token}` } : {})
+            },
+            body: JSON.stringify(formData)
+          });
+          if (!res.ok) {
+            const err = await res.json().catch(() => ({ message: 'Failed to save' }));
+            alert(err.message || 'Failed to save record');
+            return;
+          }
+          navigate('/records');
+        } catch (err) {
+          console.error(err);
+          alert('Failed to save record');
+        }
+      })();
     }
   };
   // Prepare dropdown options
-  const departmentOptions = mockDepartments.filter(d => d.status === 'Active').map(d => ({
+  // Prepare dropdown options from state
+  const departmentOptions = departments?.filter(d => d.status === 'Active').map(d => ({
     value: d.name,
     label: d.name
-  }));
-  const categoryOptions = mockCategories.filter(c => c.status === 'Active').map(c => ({
+  })) || [];
+  
+  const categoryOptions = categories?.filter(c => c.status === 'Active').map(c => ({
     value: c.name,
     label: c.name
-  }));
-  const staffOptions = mockStaff.map(s => ({
+  })) || [];
+  
+  const staffOptions = staff?.map(s => ({
     value: s.name,
     label: s.name
-  }));
-  const bidderOptions = mockBidders.map(b => ({
+  })) || [];
+  
+  const bidderOptions = bidders?.map(b => ({
     value: b.name,
     label: b.name
-  }));
+  })) || [];
   const statusOptions = [{
     value: 'Under Evacuation',
     label: 'Under Evacuation'

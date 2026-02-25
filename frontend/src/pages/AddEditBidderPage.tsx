@@ -4,7 +4,6 @@ import { ArrowLeft, Save } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Textarea } from '../components/ui/Textarea';
-import { mockBidders } from '../utils/mockData';
 import { Bidder } from '../utils/types';
 export function AddEditBidderPage() {
   const navigate = useNavigate();
@@ -18,22 +17,14 @@ export function AddEditBidderPage() {
     if (isEdit) {
       (async () => {
         try {
-          const token = localStorage.getItem('authToken') || localStorage.getItem('mock-auth-token');
+          const token = sessionStorage.getItem('authToken') || sessionStorage.getItem('mock-auth-token');
           const res = await fetch(`/api/bidders/${id}`, {
             headers: token ? { Authorization: `Bearer ${token}` } : undefined
           });
-          if (!res.ok) {
-            // fallback to mock
-            const bidder = mockBidders.find(b => b.id === id);
-            if (bidder) setFormData(bidder);
-            return;
-          }
           const data = await res.json();
           setFormData({ ...data, id: data._id || data.id });
         } catch (err) {
-          console.error('Failed to load bidder', err);
-          const bidder = mockBidders.find(b => b.id === id);
-          if (bidder) setFormData(bidder);
+          console.error('Failed to load supplier', err);
         }
       })();
     }
@@ -55,7 +46,7 @@ export function AddEditBidderPage() {
     }
     (async () => {
       try {
-        const token = localStorage.getItem('authToken') || localStorage.getItem('mock-auth-token');
+        const token = sessionStorage.getItem('authToken') || sessionStorage.getItem('mock-auth-token');
         const payload = {
           name: formData.name,
           email: formData.email,
@@ -74,13 +65,13 @@ export function AddEditBidderPage() {
         });
         if (!res.ok) {
           const err = await res.json().catch(() => ({ message: 'Failed to save' }));
-          alert(err.message || 'Failed to save bidder');
+          alert(err.message || 'Failed to save supplier');
           return;
         }
         navigate('/bidders');
       } catch (err) {
         console.error(err);
-        alert('Failed to save bidder');
+        alert('Failed to save supplier');
       }
     })();
   };
@@ -90,7 +81,7 @@ export function AddEditBidderPage() {
           <ArrowLeft className="w-5 h-5 text-slate-600" />
         </button>
         <h2 className="text-2xl font-bold text-slate-900">
-          {isEdit ? 'Edit Bidder' : 'Add New Bidder'}
+          {isEdit ? 'Edit Supplier' : 'Add New Supplier'}
         </h2>
       </div>
 
@@ -105,7 +96,7 @@ export function AddEditBidderPage() {
             Cancel
           </Button>
           <Button type="submit" leftIcon={<Save className="w-4 h-4" />}>
-            Save Bidder
+            Save Supplier
           </Button>
         </div>
       </form>

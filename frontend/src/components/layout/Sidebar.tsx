@@ -75,16 +75,16 @@ export function Sidebar({
     path: '/bidders',
     icon: <Building2 className="w-5 h-5" />,
     subItems: [{
-      title: 'Bidder List',
+      title: 'Supplier List',
       path: '/bidders',
       icon: <Building2 className="w-4 h-4" />
     }, {
-      title: 'Add Bidder',
+      title: 'Add Supplier',
       path: '/bidders/add',
       icon: <Plus className="w-4 h-4" />
     }]
   }, {
-    title: 'Bid Opening Committee',
+    title: 'TEC Committee',
     path: '/bid-opening',
     icon: <Gavel className="w-5 h-5" />,
     subItems: [{

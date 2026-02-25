@@ -1,24 +1,61 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Edit2, Trash2, Plus } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Select } from '../components/ui/Select';
 import { Modal } from '../components/ui/Modal';
-import { mockRecords } from '../utils/mockData';
 import { Record as TmsRecord } from '../utils/types';
+
 export function RecordsPage() {
   const navigate = useNavigate();
-  const [records, setRecords] = useState<TmsRecord[]>(mockRecords);
+  const [records, setRecords] = useState<TmsRecord[]>([]);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState('All');
   const [categoryFilter, setCategoryFilter] = useState('All');
   const [searchTerm, setSearchTerm] = useState('');
+
   const handleDelete = () => {
-    if (deleteId) {
-      setRecords(records.filter(r => r.id !== deleteId));
-      setDeleteId(null);
-    }
+    (async () => {
+      if (!deleteId) return;
+      try {
+        const token = sessionStorage.getItem('authToken') || sessionStorage.getItem('mock-auth-token');
+        const res = await fetch(`/api/records/${deleteId}`, {
+          method: 'DELETE',
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined
+        });
+        if (res.ok) {
+          setRecords(prev => prev.filter(r => r.id !== deleteId));
+        } else {
+          const err = await res.json().catch(() => ({ message: 'Failed to delete' }));
+          alert(err.message || 'Failed to delete record');
+        }
+      } catch (err) {
+        console.error(err);
+        alert('Failed to delete record');
+      } finally {
+        setDeleteId(null);
+      }
+    })();
   };
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const token = sessionStorage.getItem('authToken') || sessionStorage.getItem('mock-auth-token');
+        const res = await fetch('/api/records', {
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const mapped = Array.isArray(data) ? data.map((r: any) => ({ ...r, id: r._id || r.id })) : [];
+          setRecords(mapped);
+        }
+      } catch (err) {
+        console.error('Failed to load records', err);
+      }
+    };
+    load();
+  }, []);
   const filteredRecords = records.filter(record => {
     const statusMatch = statusFilter === 'All' || record.status === statusFilter;
     const categoryMatch = categoryFilter === 'All' || record.category === categoryFilter;
