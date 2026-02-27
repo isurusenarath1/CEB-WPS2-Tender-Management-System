@@ -32,9 +32,28 @@ export function DashboardPage() {
 
   // Calculate KPIs
   const total = records.length;
-  const underEvacuation = records.filter(r => r.status === 'Under Evacuation').length;
-  const awarded = records.filter(r => r.status === 'Awarded').length;
-  const rejected = records.filter(r => r.status === 'Reject').length;
+  const underEvaluation = records.filter(r => {
+    const s = (r.status || '').toString().toLowerCase();
+    return s.includes('evaluation') || s.includes('evacuation');
+  }).length;
+  const awarded = records.filter(r => (r.status || '').toString().toLowerCase() === 'awarded').length;
+  const retender = records.filter(r => (r.status || '').toString().toLowerCase() === 'retender').length;
+  const reEvaluation = records.filter(r => (r.status || '').toString().toLowerCase().includes('re-evaluation')).length;
+  
+  // Rejected card now includes Cancel and Close
+  const rejectCount = records.filter(r => {
+    const s = (r.status || '').toString().toLowerCase();
+    return s === 'reject' || s === 'rejected';
+  }).length;
+  const cancelCount = records.filter(r => (r.status || '').toString().toLowerCase().includes('cancel')).length;
+  const closeCount = records.filter(r => (r.status || '').toString().toLowerCase().includes('close')).length;
+  const rejectedTotal = rejectCount + cancelCount + closeCount;
+
+  const rejectedBreakdown = [
+    { label: 'Rejected', value: rejectCount },
+    { label: 'Cancelled', value: cancelCount },
+    { label: 'Closed', value: closeCount }
+  ];
 
   // Pie Chart Data
   const statusCounts = records.reduce((acc, record) => {
@@ -52,7 +71,7 @@ export function DashboardPage() {
   ];
 
   // Aging Data
-  const pendingRecords = records.filter(r => r.status === 'Under Evacuation');
+  const pendingRecords = records.filter(r => (r.status as string) === 'Under Evaluation' || (r.status as string) === 'Under Evacuation');
   const agingData = [{
     range: '0-30',
     count: pendingRecords.filter(r => (r.delay || 0) <= 30).length,
@@ -78,11 +97,20 @@ export function DashboardPage() {
   }
   return <div className="space-y-6">
       {/* KPI Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
         <KpiCard title="Total Records" value={total} icon={FileText} color="blue" trend="+12% from last month" />
-        <KpiCard title="Under Evacuation" value={underEvacuation} icon={Clock} color="amber" trend="Requires attention" />
+        <KpiCard title="Under Evaluation" value={underEvaluation} icon={Clock} color="amber" trend="Requires attention" />
         <KpiCard title="Awarded" value={awarded} icon={CheckCircle} color="green" trend="Steady progress" />
-        <KpiCard title="Rejected" value={rejected} icon={AlertCircle} color="red" trend="Action needed" />
+        <KpiCard title="Retender" value={retender} icon={Clock} color="amber" trend="Action required" />
+        <KpiCard title="Re evaluation" value={reEvaluation} icon={Clock} color="amber" trend="In progress" />
+        <KpiCard 
+          title="Rejected" 
+          value={rejectedTotal} 
+          icon={AlertCircle} 
+          color="red" 
+          trend="Total count" 
+          breakdown={rejectedBreakdown}
+        />
       </div>
 
       {/* Charts Section */}

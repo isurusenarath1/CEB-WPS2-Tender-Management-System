@@ -96,7 +96,7 @@ export function AddEditCommitteePage() {
   const validate = () => {
     const newErrors: Record<string, string> = {};
     if (!formData.committeeNumber) newErrors.committeeNumber = 'Committee Number is required';
-    if (!formData.member1) newErrors.member1 = 'Member 1 is required';
+    if (!formData.member1) newErrors.member1 = 'Member 1 (Chairman) is required';
     if (!formData.member2) newErrors.member2 = 'Member 2 is required';
     if (!formData.member3) newErrors.member3 = 'Member 3 is required';
     if (!formData.appointedDate) newErrors.appointedDate = 'Appointed Date is required';
@@ -161,11 +161,11 @@ export function AddEditCommitteePage() {
               Committee Members
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <Select label="Member 1" name="member1" value={formData.member1 || ''} onChange={handleChange} error={errors.member1} options={staffOptions} />
+              <Select label="Chairman" name="member1" value={formData.member1 || ''} onChange={handleChange} error={errors.member1} options={staffOptions} />
 
-              <Select label="Member 2" name="member2" value={formData.member2 || ''} onChange={handleChange} error={errors.member2} options={staffOptions} />
+              <Select label="Member 1" name="member2" value={formData.member2 || ''} onChange={handleChange} error={errors.member2} options={staffOptions} />
 
-              <Select label="Member 3" name="member3" value={formData.member3 || ''} onChange={handleChange} error={errors.member3} options={staffOptions} />
+              <Select label="Member 2" name="member3" value={formData.member3 || ''} onChange={handleChange} error={errors.member3} options={staffOptions} />
             </div>
           </div>
 

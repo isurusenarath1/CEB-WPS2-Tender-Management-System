@@ -65,13 +65,13 @@ export function BidOpeningCommitteePage() {
     header: 'Committee Number',
     accessorKey: 'committeeNumber' as keyof BidOpeningCommittee
   }, {
-    header: 'Member 1',
+    header: 'Chairman',
     accessorKey: 'member1' as keyof BidOpeningCommittee
   }, {
-    header: 'Member 2',
+    header: 'Member 1',
     accessorKey: 'member2' as keyof BidOpeningCommittee
   }, {
-    header: 'Member 3',
+    header: 'Member 2',
     accessorKey: 'member3' as keyof BidOpeningCommittee
   }, {
     header: 'Additional Members',

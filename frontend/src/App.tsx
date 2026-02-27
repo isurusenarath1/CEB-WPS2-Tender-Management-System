@@ -5,6 +5,7 @@ import { LoginPage } from './pages/LoginPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { RecordsPage } from './pages/RecordsPage';
 import { AddEditRecordPage } from './pages/AddEditRecordPage';
+import { ViewRecordPage } from './pages/ViewRecordPage';
 import { CategoryListPage } from './pages/CategoryListPage';
 import { AddEditCategoryPage } from './pages/AddEditCategoryPage';
 import { DepartmentListPage } from './pages/DepartmentListPage';
@@ -38,6 +39,7 @@ export function App() {
           <Route path="/records" element={<RecordsPage />} />
           <Route path="/records/add" element={<AddEditRecordPage />} />
           <Route path="/records/edit/:id" element={<AddEditRecordPage />} />
+          <Route path="/records/view/:id" element={<ViewRecordPage />} />
 
           <Route path="/categories" element={<CategoryListPage />} />
           <Route path="/categories/add" element={<AddEditCategoryPage />} />

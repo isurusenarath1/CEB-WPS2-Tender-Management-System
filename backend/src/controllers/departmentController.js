@@ -18,9 +18,6 @@ exports.create = async (req, res, next) => {
     });
     res.status(201).json(item);
   } catch (err) { 
-    if (err.code === 11000) {
-      return res.status(400).json({ message: 'Department name or code already exists' });
-    }
     next(err); 
   }
 };
@@ -45,9 +42,6 @@ exports.update = async (req, res, next) => {
     });
     res.json(item);
   } catch (err) { 
-    if (err.code === 11000) {
-      return res.status(400).json({ message: 'Department name or code already exists' });
-    }
     next(err); 
   }
 };

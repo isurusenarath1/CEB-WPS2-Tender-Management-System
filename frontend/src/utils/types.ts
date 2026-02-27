@@ -1,8 +1,8 @@
-export type Status = 'Under Evacuation' | 'Doc Review' | 'Negotiate or Clarification' | 'Re-evaluation' | 'Reject' | 'Awarded' | 'Cancel' | 'Close' | 'Retender' | 'In PPC';
+export type Status = 'Under Evaluation' | 'Doc Review' | 'Negotiate or Clarification' | 'Re-evaluation' | 'Reject' | 'Awarded' | 'Cancel' | 'Close' | 'Retender' | 'In PPC';
 export type Category = 'Goods' | 'Services' | 'Works' | 'Consultancy';
 export type CategoryStatus = 'Active' | 'Inactive';
 export type DepartmentStatus = 'Active' | 'Inactive';
-export type RemarkType = 'Under Evacuation' | 'Doc Review' | 'Negotiate or Clarification' | 'Re-evaluation' | 'Reject' | 'Awarded' | 'Cancel' | 'Close' | 'Retender' | 'In PPC';
+export type RemarkType = 'Under Evaluation' | 'Doc Review' | 'Negotiate or Clarification' | 'Re-evaluation' | 'Reject' | 'Awarded' | 'Cancel' | 'Close' | 'Retender' | 'In PPC';
 export type UserRole = 'Super Admin' | 'Admin' | 'Clerk 1' | 'Clerk 2' | 'Clerk 3';
 export type UserStatus = 'Active' | 'Inactive';
 export type CommitteeStatus = 'Active' | 'Inactive';
@@ -32,6 +32,7 @@ export interface Record {
   status: Status;
 
   // TEC Committee
+  tecCommitteeNumber?: string;
   tecChairman: string; // Staff (from dropdown)
   tecMember1: string; // Staff (from dropdown)
   tecMember2: string; // Acc Assistant (from dropdown)
