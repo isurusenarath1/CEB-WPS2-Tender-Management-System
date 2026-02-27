@@ -1,8 +1,8 @@
 // React not required with the new JSX transform
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, FileText, Plus, Users, UserPlus, Building2, Download, LogOut, Menu, FolderOpen, Briefcase, Gavel, Shield, FileSearch } from 'lucide-react';
+import { LayoutDashboard, FileText, Plus, Users, UserPlus, Building2, Download, LogOut, SquareLibrary, Menu, FolderOpen, Briefcase, Gavel, Shield, FileSearch } from 'lucide-react';
 interface SidebarProps {
-  isOpen: boolean;
+  isOpen: boolean;  
   setIsOpen: (isOpen: boolean) => void;
 }
 export function Sidebar({
@@ -75,16 +75,16 @@ export function Sidebar({
     path: '/bidders',
     icon: <Building2 className="w-5 h-5" />,
     subItems: [{
-      title: 'Bidder List',
+      title: 'Supplier List',
       path: '/bidders',
       icon: <Building2 className="w-4 h-4" />
     }, {
-      title: 'Add Bidder',
+      title: 'Add Supplier',
       path: '/bidders/add',
       icon: <Plus className="w-4 h-4" />
     }]
   }, {
-    title: 'Bid Opening Committee',
+    title: 'TEC Committee',
     path: '/bid-opening',
     icon: <Gavel className="w-5 h-5" />,
     subItems: [{
@@ -131,10 +131,10 @@ export function Sidebar({
         {/* Logo Area - Fixed at top */}
         <div className="flex items-center justify-between h-16 px-6 bg-slate-950 flex-shrink-0">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-[#bd5d2a] rounded-lg flex items-center justify-center">
-              <FileText className="w-5 h-5 text-white" />
-            </div>
-            <span className="text-lg font-bold tracking-tight">TEC Admin</span>
+            {/* <div className="w-8 h-8 bg-[#bd5d2a] rounded-lg flex items-center justify-center">
+              <SquareLibrary className="w-5 h-5 text-white" />
+            </div> */}
+            <span className="text-lg font-bold tracking-tight">Tender Management</span>
           </div>
           <button onClick={() => setIsOpen(false)} className="lg:hidden text-slate-400 hover:text-white">
             <Menu className="w-6 h-6" />

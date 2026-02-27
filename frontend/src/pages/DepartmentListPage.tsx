@@ -1,23 +1,60 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Edit2, Trash2 } from 'lucide-react';
 import { DataTable } from '../components/shared/DataTable';
 import { Button } from '../components/ui/Button';
 import { Modal } from '../components/ui/Modal';
 import { Select } from '../components/ui/Select';
-import { mockDepartments } from '../utils/mockData';
 import { Department } from '../utils/types';
+
 export function DepartmentListPage() {
   const navigate = useNavigate();
-  const [departments, setDepartments] = useState<Department[]>(mockDepartments);
+  const [departments, setDepartments] = useState<Department[]>([]);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState('All');
+
   const handleDelete = () => {
-    if (deleteId) {
-      setDepartments(departments.filter(d => d.id !== deleteId));
-      setDeleteId(null);
-    }
+    (async () => {
+      if (!deleteId) return;
+      try {
+        const token = sessionStorage.getItem('authToken') || sessionStorage.getItem('mock-auth-token');
+        const res = await fetch(`/api/departments/${deleteId}`, {
+          method: 'DELETE',
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined
+        });
+        if (res.ok) {
+          setDepartments(prev => prev.filter(d => d.id !== deleteId));
+        } else {
+          const err = await res.json().catch(() => ({ message: 'Failed to delete' }));
+          alert(err.message || 'Failed to delete department');
+        }
+      } catch (err) {
+        console.error(err);
+        alert('Failed to delete department');
+      } finally {
+        setDeleteId(null);
+      }
+    })();
   };
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const token = sessionStorage.getItem('authToken') || sessionStorage.getItem('mock-auth-token');
+        const res = await fetch('/api/departments', {
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const mapped = Array.isArray(data) ? data.map((d: any) => ({ ...d, id: d._id || d.id })) : [];
+          setDepartments(mapped);
+        }
+      } catch (err) {
+        console.error('Failed to load departments', err);
+      }
+    };
+    load();
+  }, []);
   const filteredDepartments = departments.filter(department => {
     return statusFilter === 'All' || department.status === statusFilter;
   });

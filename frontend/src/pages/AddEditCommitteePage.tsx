@@ -5,7 +5,6 @@ import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Select } from '../components/ui/Select';
 import { DatePicker } from '../components/ui/DatePicker';
-import { mockBidOpeningCommittees, mockStaff } from '../utils/mockData';
 import { BidOpeningCommittee } from '../utils/types';
 export function AddEditCommitteePage() {
   const navigate = useNavigate();
@@ -19,14 +18,47 @@ export function AddEditCommitteePage() {
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [newMember, setNewMember] = useState('');
+  const [staffList, setStaffList] = useState<{ name: string; id: string }[]>([]);
   useEffect(() => {
-    if (isEdit) {
-      const committee = mockBidOpeningCommittees.find(c => c.id === id);
-      if (committee) {
-        setFormData(committee);
+    const load = async () => {
+      if (!isEdit) return;
+      try {
+        const token = sessionStorage.getItem('mock-auth-token') || sessionStorage.getItem('authToken') || sessionStorage.getItem('token');
+        const res = await fetch(`/api/committees/${id}`, {
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined
+        });
+        if (!res.ok) throw new Error('Failed to fetch');
+        const data = await res.json();
+        const normalized = {
+          ...data,
+          id: data._id || data.id,
+          appointedDate: data.appointedDate ? String(data.appointedDate).slice(0, 10) : ''
+        };
+        setFormData(normalized);
+      } catch (err) {
+        console.error('Failed to load committee from API', err);
       }
-    }
+    };
+    load();
   }, [id, isEdit]);
+
+  useEffect(() => {
+    const loadStaff = async () => {
+      try {
+        const token = sessionStorage.getItem('authToken') || sessionStorage.getItem('mock-auth-token') || sessionStorage.getItem('token');
+        const res = await fetch('/api/staff', {
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined
+        });
+        if (!res.ok) throw new Error('Failed to fetch staff');
+        const data = await res.json();
+        const mapped = Array.isArray(data) ? data.map((s: any) => ({ id: s._id || s.id, name: s.name })) : [];
+        setStaffList(mapped);
+      } catch (err) {
+        console.error('Failed to load staff list', err);
+      }
+    };
+    loadStaff();
+  }, []);
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const {
       name,
@@ -64,7 +96,7 @@ export function AddEditCommitteePage() {
   const validate = () => {
     const newErrors: Record<string, string> = {};
     if (!formData.committeeNumber) newErrors.committeeNumber = 'Committee Number is required';
-    if (!formData.member1) newErrors.member1 = 'Member 1 is required';
+    if (!formData.member1) newErrors.member1 = 'Member 1 (Chairman) is required';
     if (!formData.member2) newErrors.member2 = 'Member 2 is required';
     if (!formData.member3) newErrors.member3 = 'Member 3 is required';
     if (!formData.appointedDate) newErrors.appointedDate = 'Appointed Date is required';
@@ -74,14 +106,33 @@ export function AddEditCommitteePage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (validate()) {
-      console.log('Saving committee:', formData);
-      navigate('/bid-opening');
+      (async () => {
+        try {
+          const token = sessionStorage.getItem('mock-auth-token') || sessionStorage.getItem('authToken') || sessionStorage.getItem('token');
+          const url = isEdit ? `/api/committees/${id}` : '/api/committees';
+          const method = isEdit ? 'PUT' : 'POST';
+          const res = await fetch(url, {
+            method,
+            headers: {
+              'Content-Type': 'application/json',
+              ...(token ? { Authorization: `Bearer ${token}` } : {})
+            },
+            body: JSON.stringify(formData)
+          });
+          if (!res.ok) {
+            const err = await res.json().catch(() => ({ message: 'Failed to save' }));
+            alert(err.message || 'Failed to save committee');
+            return;
+          }
+          navigate('/bid-opening');
+        } catch (err) {
+          console.error(err);
+          alert('Failed to save committee');
+        }
+      })();
     }
   };
-  const staffOptions = mockStaff.map(s => ({
-    value: s.name,
-    label: s.name
-  }));
+  const staffOptions = staffList.map(s => ({ value: s.name, label: s.name }));
   return <div className="max-w-3xl mx-auto space-y-6">
       <div className="flex items-center gap-4 mb-6">
         <button onClick={() => navigate('/bid-opening')} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
@@ -110,11 +161,11 @@ export function AddEditCommitteePage() {
               Committee Members
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <Select label="Member 1" name="member1" value={formData.member1 || ''} onChange={handleChange} error={errors.member1} options={staffOptions} />
+              <Select label="Chairman" name="member1" value={formData.member1 || ''} onChange={handleChange} error={errors.member1} options={staffOptions} />
 
-              <Select label="Member 2" name="member2" value={formData.member2 || ''} onChange={handleChange} error={errors.member2} options={staffOptions} />
+              <Select label="Member 1" name="member2" value={formData.member2 || ''} onChange={handleChange} error={errors.member2} options={staffOptions} />
 
-              <Select label="Member 3" name="member3" value={formData.member3 || ''} onChange={handleChange} error={errors.member3} options={staffOptions} />
+              <Select label="Member 2" name="member3" value={formData.member3 || ''} onChange={handleChange} error={errors.member3} options={staffOptions} />
             </div>
           </div>
 

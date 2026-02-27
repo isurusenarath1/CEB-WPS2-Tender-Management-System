@@ -1,24 +1,61 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Edit2, Trash2, Plus } from 'lucide-react';
+import { Edit2, Trash2, Plus, Eye } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Select } from '../components/ui/Select';
 import { Modal } from '../components/ui/Modal';
-import { mockRecords } from '../utils/mockData';
 import { Record as TmsRecord } from '../utils/types';
+
 export function RecordsPage() {
   const navigate = useNavigate();
-  const [records, setRecords] = useState<TmsRecord[]>(mockRecords);
+  const [records, setRecords] = useState<TmsRecord[]>([]);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState('All');
   const [categoryFilter, setCategoryFilter] = useState('All');
   const [searchTerm, setSearchTerm] = useState('');
+
   const handleDelete = () => {
-    if (deleteId) {
-      setRecords(records.filter(r => r.id !== deleteId));
-      setDeleteId(null);
-    }
+    (async () => {
+      if (!deleteId) return;
+      try {
+        const token = sessionStorage.getItem('authToken') || sessionStorage.getItem('mock-auth-token');
+        const res = await fetch(`/api/records/${deleteId}`, {
+          method: 'DELETE',
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined
+        });
+        if (res.ok) {
+          setRecords(prev => prev.filter(r => r.id !== deleteId));
+        } else {
+          const err = await res.json().catch(() => ({ message: 'Failed to delete' }));
+          alert(err.message || 'Failed to delete record');
+        }
+      } catch (err) {
+        console.error(err);
+        alert('Failed to delete record');
+      } finally {
+        setDeleteId(null);
+      }
+    })();
   };
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const token = sessionStorage.getItem('authToken') || sessionStorage.getItem('mock-auth-token');
+        const res = await fetch('/api/records', {
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const mapped = Array.isArray(data) ? data.map((r: any) => ({ ...r, id: r._id || r.id })) : [];
+          setRecords(mapped);
+        }
+      } catch (err) {
+        console.error('Failed to load records', err);
+      }
+    };
+    load();
+  }, []);
   const filteredRecords = records.filter(record => {
     const statusMatch = statusFilter === 'All' || record.status === statusFilter;
     const categoryMatch = categoryFilter === 'All' || record.category === categoryFilter;
@@ -27,7 +64,7 @@ export function RecordsPage() {
   });
   const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
-      'Under Evacuation': 'bg-amber-100 text-amber-800',
+      'Under Evaluation': 'bg-amber-100 text-amber-800',
       'Doc Review': 'bg-blue-100 text-blue-800',
       'Negotiate or Clarification': 'bg-purple-100 text-purple-800',
       'Re-evaluation': 'bg-orange-100 text-orange-800',
@@ -40,8 +77,16 @@ export function RecordsPage() {
     };
     return colors[status] || 'bg-gray-100 text-gray-800';
   };
-  return <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+  const formatDate = (dateStr: string | undefined) => {
+    if (!dateStr) return '-';
+    try {
+      return new Date(dateStr).toISOString().split('T')[0];
+    } catch (e) {
+      return typeof dateStr === 'string' ? dateStr.slice(0, 10) : '-';
+    }
+  };
+  return <div className="h-[calc(100vh-140px)] flex flex-col gap-6">
+      <div className="flex-shrink-0 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h2 className="text-2xl font-bold text-slate-900">
             Records Management
@@ -54,17 +99,29 @@ export function RecordsPage() {
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-4">
+      <div className="flex-shrink-0 bg-white rounded-lg shadow-sm border border-slate-200 p-4">
         <div className="flex flex-col sm:flex-row gap-4">
-          <div className="flex-1">
-            <input type="text" placeholder="Search by Tender Number..." className="w-full h-10 rounded-md border border-slate-300 px-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
+          <div className="flex-1 min-w-[300px]">
+            <input 
+              type="text" 
+              placeholder="Search by Tender Number..." 
+              className="w-full h-10 rounded-md border border-slate-300 px-3 text-sm text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none bg-white" 
+              value={searchTerm} 
+              onChange={e => setSearchTerm(e.target.value)} 
+            />
           </div>
           <Select className="w-full sm:w-48" options={[{
           value: 'All',
           label: 'All Status'
         }, {
-          value: 'Under Evacuation',
-          label: 'Under Evacuation'
+          value: 'Awarded',
+          label: 'Awarded'
+        }, {
+          value: 'Cancel',
+          label: 'Cancel'
+        }, {
+          value: 'Close',
+          label: 'Close'
         }, {
           value: 'Doc Review',
           label: 'Doc Review'
@@ -78,20 +135,11 @@ export function RecordsPage() {
           value: 'Reject',
           label: 'Reject'
         }, {
-          value: 'Awarded',
-          label: 'Awarded'
-        }, {
-          value: 'Cancel',
-          label: 'Cancel'
-        }, {
-          value: 'Close',
-          label: 'Close'
-        }, {
           value: 'Retender',
           label: 'Retender'
         }, {
-          value: 'In PPC',
-          label: 'In PPC'
+          value: 'Under Evaluation',
+          label: 'Under Evaluation'
         }]} value={statusFilter} onChange={e => setStatusFilter(e.target.value)} />
           <Select className="w-full sm:w-48" options={[{
           value: 'All',
@@ -112,11 +160,11 @@ export function RecordsPage() {
         </div>
       </div>
 
-      {/* Table with horizontal and vertical scrolling */}
-      <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
-        <div className="overflow-x-auto overflow-y-auto max-h-[600px]">
+      {/* Table Section */}
+      <div className="flex-1 min-h-0 bg-white/90 backdrop-blur-sm rounded-xl shadow-lg border border-white/20 overflow-hidden ring-1 ring-slate-200 flex flex-col">
+        <div className="flex-1 overflow-auto custom-scrollbar">
           <table className="w-full text-sm text-left min-w-[1800px]">
-            <thead className="text-xs text-slate-500 uppercase bg-slate-50 border-b border-slate-200 sticky top-0 z-10">
+            <thead className="text-xs text-slate-500 uppercase bg-slate-50 border-b border-slate-200 sticky top-0 z-20">
               <tr>
                 <th className="px-4 py-3 font-medium whitespace-nowrap">
                   Tender No
@@ -160,7 +208,7 @@ export function RecordsPage() {
                 <th className="px-4 py-3 font-medium whitespace-nowrap">
                   Delay
                 </th>
-                <th className="px-4 py-3 font-medium whitespace-nowrap sticky right-0 bg-slate-50">
+                <th className="px-4 py-3 font-medium whitespace-nowrap sticky right-0 bg-slate-50 z-20 shadow-[-4px_0_12px_-4px_rgba(0,0,0,0.1)]">
                   Actions
                 </th>
               </tr>
@@ -182,16 +230,16 @@ export function RecordsPage() {
                       </span>
                     </td>
                     <td className="px-4 py-3 text-slate-700 whitespace-nowrap">
-                      {record.bidStartDate}
+                      {formatDate(record.bidStartDate)}
                     </td>
                     <td className="px-4 py-3 text-slate-700 whitespace-nowrap">
-                      {record.bidOpenDate}
+                      {formatDate(record.bidOpenDate)}
                     </td>
                     <td className="px-4 py-3 text-slate-700 whitespace-nowrap">
-                      {record.bidClosingDate}
+                      {formatDate(record.bidClosingDate)}
                     </td>
                     <td className="px-4 py-3 text-slate-700 whitespace-nowrap">
-                      {record.fileSentToTecDate}
+                      {formatDate(record.fileSentToTecDate)}
                     </td>
                     <td className="px-4 py-3 text-slate-700 whitespace-nowrap">
                       {record.bidBondNumber || '-'}
@@ -213,8 +261,11 @@ export function RecordsPage() {
                     <td className="px-4 py-3 text-slate-700 whitespace-nowrap">
                       {record.delay !== undefined ? `${record.delay} days` : '-'}
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap sticky right-0 bg-inherit">
+                    <td className="px-4 py-3 whitespace-nowrap sticky right-0 z-10 bg-white group-hover:bg-slate-50 shadow-[-4px_0_12px_-4px_rgba(0,0,0,0.1)] transition-colors">
                       <div className="flex items-center gap-2">
+                        <button onClick={() => navigate(`/records/view/${record.id}`)} className="p-1 text-slate-400 hover:text-[#bd5d2a] transition-colors" title="View">
+                          <Eye className="w-4 h-4" />
+                        </button>
                         <button onClick={() => navigate(`/records/edit/${record.id}`)} className="p-1 text-slate-400 hover:text-blue-600 transition-colors" title="Edit">
                           <Edit2 className="w-4 h-4" />
                         </button>

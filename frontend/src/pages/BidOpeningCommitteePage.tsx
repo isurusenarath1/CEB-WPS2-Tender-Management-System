@@ -1,23 +1,63 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Edit2, Trash2 } from 'lucide-react';
 import { DataTable } from '../components/shared/DataTable';
 import { Button } from '../components/ui/Button';
 import { Modal } from '../components/ui/Modal';
 import { Select } from '../components/ui/Select';
-import { mockBidOpeningCommittees } from '../utils/mockData';
 import { BidOpeningCommittee } from '../utils/types';
 export function BidOpeningCommitteePage() {
   const navigate = useNavigate();
-  const [committees, setCommittees] = useState<BidOpeningCommittee[]>(mockBidOpeningCommittees);
+  const [committees, setCommittees] = useState<BidOpeningCommittee[]>([]);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState('All');
   const handleDelete = () => {
-    if (deleteId) {
-      setCommittees(committees.filter(c => c.id !== deleteId));
-      setDeleteId(null);
-    }
+    (async () => {
+      if (!deleteId) return;
+      try {
+        const token = sessionStorage.getItem('mock-auth-token') || sessionStorage.getItem('authToken') || sessionStorage.getItem('token');
+        const res = await fetch(`/api/committees/${deleteId}`, {
+          method: 'DELETE',
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined
+        });
+        if (res.ok) {
+          setCommittees(prev => prev.filter(c => c.id !== deleteId));
+        } else {
+          const err = await res.json().catch(() => ({ message: 'Failed to delete' }));
+          alert(err.message || 'Failed to delete committee');
+        }
+      } catch (err) {
+        console.error(err);
+        alert('Failed to delete committee');
+      } finally {
+        setDeleteId(null);
+      }
+    })();
   };
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const token = sessionStorage.getItem('mock-auth-token') || sessionStorage.getItem('authToken') || sessionStorage.getItem('token');
+        const res = await fetch('/api/committees', {
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const mapped = Array.isArray(data) ? data.map((d: any) => ({
+            ...d,
+            id: d._id || d.id,
+            appointedDate: d.appointedDate ? String(d.appointedDate).slice(0, 10) : ''
+          })) : [];
+          setCommittees(mapped);
+          return;
+        }
+      } catch (err) {
+        console.warn('Failed to load committees from API', err);
+      }
+    };
+    load();
+  }, []);
   const filteredCommittees = committees.filter(committee => {
     return statusFilter === 'All' || committee.status === statusFilter;
   });
@@ -25,13 +65,13 @@ export function BidOpeningCommitteePage() {
     header: 'Committee Number',
     accessorKey: 'committeeNumber' as keyof BidOpeningCommittee
   }, {
-    header: 'Member 1',
+    header: 'Chairman',
     accessorKey: 'member1' as keyof BidOpeningCommittee
   }, {
-    header: 'Member 2',
+    header: 'Member 1',
     accessorKey: 'member2' as keyof BidOpeningCommittee
   }, {
-    header: 'Member 3',
+    header: 'Member 2',
     accessorKey: 'member3' as keyof BidOpeningCommittee
   }, {
     header: 'Additional Members',
@@ -70,10 +110,10 @@ export function BidOpeningCommitteePage() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h2 className="text-2xl font-bold text-slate-900">
-            Bid Opening Committee
+            TEC Committee
           </h2>
           <p className="text-slate-500">
-            Manage bid opening committee members and appointments
+            Manage TEC committee members and appointments
           </p>
         </div>
         <Button onClick={() => navigate('/bid-opening/add')} leftIcon={<Plus className="w-4 h-4" />}>

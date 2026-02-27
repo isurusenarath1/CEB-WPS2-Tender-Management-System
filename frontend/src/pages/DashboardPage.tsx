@@ -1,47 +1,77 @@
-// React import not required with new JSX transform
+import { useState, useEffect } from 'react';
 import { FileText, Clock, CheckCircle, AlertCircle } from 'lucide-react';
 import { KpiCard } from '../components/dashboard/KpiCard';
 import { PieChart } from '../components/dashboard/PieChart';
 import { BarChart } from '../components/dashboard/BarChart';
 import { AgingTable } from '../components/dashboard/AgingTable';
-import { mockRecords } from '../utils/mockData';
+import { Record as TmsRecord } from '../utils/types';
+
 export function DashboardPage() {
-  // Calculate KPIs from mock data
-  const total = mockRecords.length;
-  const underEvacuation = mockRecords.filter(r => r.status === 'Under Evacuation').length;
-  const awarded = mockRecords.filter(r => r.status === 'Awarded').length;
-  const rejected = mockRecords.filter(r => r.status === 'Reject').length;
-  // Pie Chart Data - Updated with new status values
-  const statusCounts = mockRecords.reduce((acc, record) => {
+  const [records, setRecords] = useState<TmsRecord[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const token = sessionStorage.getItem('mock-auth-token') || sessionStorage.getItem('authToken');
+        const res = await fetch('/api/records', {
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setRecords(Array.isArray(data) ? data : []);
+        }
+      } catch (err) {
+        console.error('Failed to load dashboard data', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    loadData();
+  }, []);
+
+  // Calculate KPIs
+  const total = records.length;
+  const underEvaluation = records.filter(r => {
+    const s = (r.status || '').toString().toLowerCase();
+    return s.includes('evaluation') || s.includes('evacuation');
+  }).length;
+  const awarded = records.filter(r => (r.status || '').toString().toLowerCase() === 'awarded').length;
+  const retender = records.filter(r => (r.status || '').toString().toLowerCase() === 'retender').length;
+  const reEvaluation = records.filter(r => (r.status || '').toString().toLowerCase().includes('re-evaluation')).length;
+  
+  // Rejected card now includes Cancel and Close
+  const rejectCount = records.filter(r => {
+    const s = (r.status || '').toString().toLowerCase();
+    return s === 'reject' || s === 'rejected';
+  }).length;
+  const cancelCount = records.filter(r => (r.status || '').toString().toLowerCase().includes('cancel')).length;
+  const closeCount = records.filter(r => (r.status || '').toString().toLowerCase().includes('close')).length;
+  const rejectedTotal = rejectCount + cancelCount + closeCount;
+
+  const rejectedBreakdown = [
+    { label: 'Rejected', value: rejectCount },
+    { label: 'Cancelled', value: cancelCount },
+    { label: 'Closed', value: closeCount }
+  ];
+
+  // Pie Chart Data
+  const statusCounts = records.reduce((acc, record) => {
     acc[record.status] = (acc[record.status] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
   const pieData = Object.entries(statusCounts).map(([name, value]) => ({
     name,
-    value
+    value: Number(value)
   }));
-  // Bar Chart Data (Mocking monthly data)
-  const barData = [{
-    name: 'May',
-    value: 12
-  }, {
-    name: 'Jun',
-    value: 19
-  }, {
-    name: 'Jul',
-    value: 15
-  }, {
-    name: 'Aug',
-    value: 22
-  }, {
-    name: 'Sep',
-    value: 28
-  }, {
-    name: 'Oct',
-    value: total
-  }];
-  // Aging Data - calculate based on delay field
-  const pendingRecords = mockRecords.filter(r => r.status === 'Under Evacuation' || r.delay !== undefined);
+
+  // Bar Chart Data
+  const barData = [
+    { name: 'Total Records', value: total }
+  ];
+
+  // Aging Data
+  const pendingRecords = records.filter(r => (r.status as string) === 'Under Evaluation' || (r.status as string) === 'Under Evacuation');
   const agingData = [{
     range: '0-30',
     count: pendingRecords.filter(r => (r.delay || 0) <= 30).length,
@@ -59,13 +89,28 @@ export function DashboardPage() {
     count: pendingRecords.filter(r => (r.delay || 0) > 90).length,
     color: 'bg-red-100 text-red-800'
   }];
+
+  if (isLoading) {
+    return <div className="flex items-center justify-center p-12 h-full">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+    </div>;
+  }
   return <div className="space-y-6">
       {/* KPI Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
         <KpiCard title="Total Records" value={total} icon={FileText} color="blue" trend="+12% from last month" />
-        <KpiCard title="Under Evacuation" value={underEvacuation} icon={Clock} color="amber" trend="Requires attention" />
+        <KpiCard title="Under Evaluation" value={underEvaluation} icon={Clock} color="amber" trend="Requires attention" />
         <KpiCard title="Awarded" value={awarded} icon={CheckCircle} color="green" trend="Steady progress" />
-        <KpiCard title="Rejected" value={rejected} icon={AlertCircle} color="red" trend="Action needed" />
+        <KpiCard title="Retender" value={retender} icon={Clock} color="amber" trend="Action required" />
+        <KpiCard title="Re evaluation" value={reEvaluation} icon={Clock} color="amber" trend="In progress" />
+        <KpiCard 
+          title="Rejected" 
+          value={rejectedTotal} 
+          icon={AlertCircle} 
+          color="red" 
+          trend="Total count" 
+          breakdown={rejectedBreakdown}
+        />
       </div>
 
       {/* Charts Section */}
