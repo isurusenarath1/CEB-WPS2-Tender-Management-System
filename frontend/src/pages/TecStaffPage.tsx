@@ -1,21 +1,59 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Edit2, Trash2 } from 'lucide-react';
 import { DataTable } from '../components/shared/DataTable';
 import { Button } from '../components/ui/Button';
 import { Modal } from '../components/ui/Modal';
-import { mockStaff } from '../utils/mockData';
 import { Staff } from '../utils/types';
 export function TecStaffPage() {
   const navigate = useNavigate();
-  const [staff, setStaff] = useState<Staff[]>(mockStaff);
+  const [staff, setStaff] = useState<Staff[]>([]);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const handleDelete = () => {
-    if (deleteId) {
-      setStaff(staff.filter(s => s.id !== deleteId));
-      setDeleteId(null);
-    }
+    (async () => {
+      if (!deleteId) return;
+      try {
+        const token = sessionStorage.getItem('authToken') || sessionStorage.getItem('mock-auth-token');
+        const res = await fetch(`/api/staff/${deleteId}`, {
+          method: 'DELETE',
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined
+        });
+        if (res.ok) {
+          setStaff(prev => prev.filter(s => s.id !== deleteId));
+        } else {
+          const err = await res.json().catch(() => ({ message: 'Failed to remove staff' }));
+          alert(err.message || 'Failed to remove staff');
+        }
+      } catch (err) {
+        console.error(err);
+        alert('Failed to remove staff');
+      } finally {
+        setDeleteId(null);
+      }
+    })();
   };
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const token = sessionStorage.getItem('authToken') || sessionStorage.getItem('mock-auth-token');
+        const res = await fetch('/api/staff', {
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined
+        });
+        if (!res.ok) throw new Error('Failed to fetch staff');
+        const data = await res.json();
+        const mapped = Array.isArray(data) ? data.map((s: any) => ({
+          ...s,
+          id: s._id || s.id
+        })) : [];
+        setStaff(mapped);
+      } catch (err) {
+        console.error('Failed to load staff', err);
+        setStaff([]);
+      }
+    };
+    load();
+  }, []);
   const columns = [{
     header: 'Name',
     accessorKey: 'name' as keyof Staff

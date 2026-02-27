@@ -15,8 +15,8 @@ export function Header({
     if (path.startsWith('/categories')) return 'Category Management';
     if (path.startsWith('/departments')) return 'Department Management';
     if (path.startsWith('/tec-staff')) return 'TEC Staff';
-    if (path.startsWith('/bidders')) return 'Bidder Management';
-    if (path.startsWith('/bid-opening')) return 'Bid Opening Committee';
+    if (path.startsWith('/bidders')) return 'Suppler Management';
+    if (path.startsWith('/bid-opening')) return 'TEC Committee';
     if (path.startsWith('/users')) return 'User Management';
     if (path === '/audit-log') return 'Audit Log';
     if (path === '/export') return 'Export Data';
@@ -40,7 +40,7 @@ export function Header({
         <div className="flex items-center gap-3 pl-4 border-l border-slate-200">
           <div className="text-right hidden sm:block">
             <p className="text-sm font-medium text-slate-900">Admin User</p>
-            <p className="text-xs text-slate-500">admin@tec.gov</p>
+            <p className="text-xs text-slate-500">testadmin@tec.gov</p>
           </div>
           <div className="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center">
             <User className="w-5 h-5" />

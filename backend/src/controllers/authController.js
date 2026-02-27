@@ -31,3 +31,10 @@ exports.login = async (req, res, next) => {
     res.json({ token, user: payload });
   } catch (err) { next(err); }
 };
+
+exports.verify = async (req, res, next) => {
+  try {
+    // If the auth middleware passed, req.user is already populated
+    res.json({ user: req.user });
+  } catch (err) { next(err); }
+};

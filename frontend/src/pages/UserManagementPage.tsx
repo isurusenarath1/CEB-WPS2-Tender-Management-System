@@ -1,24 +1,66 @@
 import { useState } from 'react';
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Edit2, Trash2 } from 'lucide-react';
 import { DataTable } from '../components/shared/DataTable';
 import { Button } from '../components/ui/Button';
 import { Modal } from '../components/ui/Modal';
 import { Select } from '../components/ui/Select';
-import { mockSystemUsers } from '../utils/mockData';
 import { SystemUser } from '../utils/types';
 export function UserManagementPage() {
   const navigate = useNavigate();
-  const [users, setUsers] = useState<SystemUser[]>(mockSystemUsers);
+  const [users, setUsers] = useState<SystemUser[]>([]);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState('All');
   const [roleFilter, setRoleFilter] = useState('All');
   const handleDelete = () => {
-    if (deleteId) {
-      setUsers(users.filter(u => u.id !== deleteId));
-      setDeleteId(null);
-    }
+    (async () => {
+      if (!deleteId) return;
+      try {
+        const token = sessionStorage.getItem('authToken') || sessionStorage.getItem('mock-auth-token');
+        const res = await fetch(`/api/users/${deleteId}`, {
+          method: 'DELETE',
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined
+        });
+        if (res.ok) {
+          setUsers(prev => prev.filter(u => u.id !== deleteId));
+        } else {
+          const err = await res.json().catch(() => ({ message: 'Failed to delete' }));
+          alert(err.message || 'Failed to delete user');
+        }
+      } catch (err) {
+        console.error(err);
+        alert('Failed to delete user');
+      } finally {
+        setDeleteId(null);
+      }
+    })();
   };
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const token = sessionStorage.getItem('authToken') || sessionStorage.getItem('mock-auth-token');
+        const res = await fetch('/api/users', {
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined
+        });
+        if (!res.ok) throw new Error('Failed to fetch users');
+        const data = await res.json();
+        const mapped = Array.isArray(data) ? data.map((u: any) => ({
+          ...u,
+          id: u._id || u.id,
+          lastLogin: u.lastLogin ? String(u.lastLogin).slice(0, 19).replace('T', ' ') : '' ,
+          createdDate: u.createdAt ? String(u.createdAt).slice(0, 10) : ''
+        })) : [];
+        setUsers(mapped);
+      } catch (err) {
+        console.error('Failed to load users', err);
+        // fall back to empty array
+        setUsers([]);
+      }
+    };
+    load();
+  }, []);
   const filteredUsers = users.filter(user => {
     const statusMatch = statusFilter === 'All' || user.status === statusFilter;
     const roleMatch = roleFilter === 'All' || user.role === roleFilter;
