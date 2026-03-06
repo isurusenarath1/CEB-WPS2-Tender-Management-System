@@ -78,8 +78,8 @@ export function TecStaffPage() {
           </button>
         </div>
   }];
-  return <div className="space-y-6">
-      <div className="flex justify-between items-center">
+  return <div className="h-[calc(100vh-140px)] flex flex-col gap-6">
+      <div className="flex justify-between items-center flex-shrink-0">
         <div>
           <h2 className="text-2xl font-bold text-slate-900">TEC Staff</h2>
           <p className="text-slate-500">Manage committee members and staff</p>
@@ -89,7 +89,9 @@ export function TecStaffPage() {
         </Button>
       </div>
 
-      <DataTable data={staff} columns={columns} searchKey="name" searchPlaceholder="Search staff by name..." />
+      <div className="flex-1 min-h-0">
+        <DataTable data={staff} columns={columns} searchKey="name" searchPlaceholder="Search staff by name..." />
+      </div>
 
       <Modal isOpen={!!deleteId} onClose={() => setDeleteId(null)} title="Remove Staff Member" footer={<>
             <Button variant="ghost" onClick={() => setDeleteId(null)}>

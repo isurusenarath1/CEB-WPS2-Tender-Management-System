@@ -97,8 +97,8 @@ export function DepartmentListPage() {
           </button>
         </div>
   }];
-  return <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+  return <div className="h-[calc(100vh-140px)] flex flex-col gap-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 flex-shrink-0">
         <div>
           <h2 className="text-2xl font-bold text-slate-900">
             Department Management
@@ -112,16 +112,18 @@ export function DepartmentListPage() {
         </Button>
       </div>
 
-      <DataTable data={filteredDepartments} columns={columns} searchKey="name" searchPlaceholder="Search by department name..." filters={<Select className="w-32" options={[{
-      value: 'All',
-      label: 'All Status'
-    }, {
-      value: 'Active',
-      label: 'Active'
-    }, {
-      value: 'Inactive',
-      label: 'Inactive'
-    }]} value={statusFilter} onChange={e => setStatusFilter(e.target.value)} />} />
+      <div className="flex-1 min-h-0">
+        <DataTable data={filteredDepartments} columns={columns} searchKey="name" searchPlaceholder="Search by department name..." filters={<Select className="w-32" options={[{
+        value: 'All',
+        label: 'All Status'
+      }, {
+        value: 'Active',
+        label: 'Active'
+      }, {
+        value: 'Inactive',
+        label: 'Inactive'
+      }]} value={statusFilter} onChange={e => setStatusFilter(e.target.value)} />} />
+      </div>
 
       <Modal isOpen={!!deleteId} onClose={() => setDeleteId(null)} title="Delete Department" footer={<>
             <Button variant="ghost" onClick={() => setDeleteId(null)}>

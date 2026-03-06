@@ -8,7 +8,7 @@ interface PieChartProps {
   data: DataPoint[];
 }
 const STATUS_COLORS: Record<string, string> = {
-  'Under Evacuation': '#f59e0b',
+  'Under Evaluation': '#f59e0b',
   'Doc Review': '#3b82f6',
   'Negotiate or Clarification': '#a855f7',
   'Re-evaluation': '#f97316',

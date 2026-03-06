@@ -1,5 +1,5 @@
 const Bidder = require('../models/Bidder');
-const AuditLog = require('../models/AuditLog');
+const { logAction } = require('../utils/auditUtils');
 
 exports.list = async (req, res, next) => {
   try {
@@ -11,7 +11,7 @@ exports.list = async (req, res, next) => {
 exports.create = async (req, res, next) => {
   try {
     const item = await Bidder.create(req.body);
-    await AuditLog.create({ user: req.user?.email, type: 'create:bidder', message: `Created bidder ${item.name}` });
+    await logAction(req.user?.email, 'Create', `Created bidder ${item.name}`, req);
     res.status(201).json(item);
   } catch (err) { next(err); }
 };
@@ -27,13 +27,19 @@ exports.get = async (req, res, next) => {
 exports.update = async (req, res, next) => {
   try {
     const item = await Bidder.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    if (item) {
+      await logAction(req.user?.email, 'Update', `Updated bidder ${item.name}`, req);
+    }
     res.json(item);
   } catch (err) { next(err); }
 };
 
 exports.remove = async (req, res, next) => {
   try {
-    await Bidder.findByIdAndDelete(req.params.id);
+    const item = await Bidder.findByIdAndDelete(req.params.id);
+    if (item) {
+      await logAction(req.user?.email, 'Delete', `Deleted bidder ${item.name}`, req);
+    }
     res.json({ message: 'Deleted' });
   } catch (err) { next(err); }
 };

@@ -13,8 +13,8 @@ export const mockRecords: Record[] = [{
   bidBondNumber: 'BB-2023-001',
   bidBondBank: 'Bank of Ceylon',
   bidValidityPeriod: '2024-01-15',
-  remark: 'Under Evacuation',
-  status: 'Under Evacuation',
+  remark: 'Under Evaluation',
+  status: 'Under Evaluation',
   tecChairman: 'Dr. A. Perera',
   tecMember1: 'Mr. S. Silva',
   tecMember2: 'Ms. K. Fernando'

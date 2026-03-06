@@ -81,6 +81,32 @@ export function AddEditRecordPage() {
     loadRecord();
   }, [id, isEdit]);
 
+  // Handle delay calculation automatically
+  useEffect(() => {
+    if (formData.status === 'Awarded' && formData.approvedDate && formData.fileSentToTecDate) {
+      const awardedDate = new Date(formData.approvedDate);
+      const sentDate = new Date(formData.fileSentToTecDate);
+      
+      if (!isNaN(awardedDate.getTime()) && !isNaN(sentDate.getTime())) {
+        const diffTime = awardedDate.getTime() - sentDate.getTime();
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        
+        if (formData.delay !== diffDays) {
+          setFormData(prev => ({
+            ...prev,
+            delay: diffDays
+          }));
+        }
+      }
+    } else if (formData.status !== 'Awarded' && formData.delay !== undefined) {
+      // Clear delay if status is not Awarded
+      setFormData(prev => ({
+        ...prev,
+        delay: undefined
+      }));
+    }
+  }, [formData.status, formData.approvedDate, formData.fileSentToTecDate]);
+
   const handleCommitteeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const committeeNumber = e.target.value;
     const committee = committees.find(c => c.committeeNumber === committeeNumber);
@@ -90,7 +116,8 @@ export function AddEditRecordPage() {
       tecCommitteeNumber: committeeNumber,
       tecChairman: committee?.member1 || '',
       tecMember1: committee?.member2 || '',
-      tecMember2: committee?.member3 || ''
+      tecMember2: committee?.member3 || '',
+      tecAdditionalMembers: committee?.additionalMembers || []
     }));
 
     if (errors.tecCommitteeNumber) {
@@ -107,10 +134,19 @@ export function AddEditRecordPage() {
       name,
       value
     } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    setFormData(prev => {
+      const newData = {
+        ...prev,
+        [name]: value
+      };
+      
+      // Auto-set approvedDate when status becomes Awarded
+      if (name === 'status' && value === 'Awarded' && !prev.approvedDate) {
+        newData.approvedDate = new Date().toISOString().slice(0, 10);
+      }
+      
+      return newData;
+    });
     if (errors[name]) {
       setErrors(prev => {
         const newErrors = {
@@ -123,18 +159,8 @@ export function AddEditRecordPage() {
   };
 
   const validate = () => {
-    const newErrors: Record<string, string> = {};
-    if (!formData.tenderNumber) newErrors.tenderNumber = 'Tender Number is required';
-    if (!formData.relevantTo) newErrors.relevantTo = 'Department is required';
-    if (!formData.category) newErrors.category = 'Category is required';
-    if (!formData.description) newErrors.description = 'Description is required';
-    if (!formData.bidStartDate) newErrors.bidStartDate = 'Bid Start Date is required';
-    if (!formData.bidOpenDate) newErrors.bidOpenDate = 'Bid Open Date is required';
-    if (!formData.bidClosingDate) newErrors.bidClosingDate = 'Bid Closing Date is required';
-    if (!formData.fileSentToTecDate) newErrors.fileSentToTecDate = 'File Sent to TEC Date is required';
-    if (!formData.tecCommitteeNumber) newErrors.tecCommitteeNumber = 'TEC Committee Number is required';
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    // No validation required as per user request
+    return true;
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -339,10 +365,16 @@ export function AddEditRecordPage() {
                   <span className="text-sm font-medium text-slate-500 uppercase tracking-wider">Member 1</span>
                   <span className="text-sm text-slate-800 font-semibold">{formData.tecMember1 || 'Not Selected'}</span>
                 </div>
-                <div className="flex items-center justify-between py-1">
+                <div className="flex items-center justify-between py-1 border-b border-white/50">
                   <span className="text-sm font-medium text-slate-500 uppercase tracking-wider">Member 2</span>
                   <span className="text-sm text-slate-800 font-semibold">{formData.tecMember2 || 'Not Selected'}</span>
                 </div>
+                {formData.tecAdditionalMembers && formData.tecAdditionalMembers.length > 0 && formData.tecAdditionalMembers.map((member, index) => (
+                  <div key={index} className="flex items-center justify-between py-1 border-b border-white/50 last:border-b-0">
+                    <span className="text-sm font-medium text-slate-500 uppercase tracking-wider">Member {index + 3}</span>
+                    <span className="text-sm text-slate-800 font-semibold">{member}</span>
+                  </div>
+                ))}
               </div>
 
               {formData.status === 'Awarded' && formData.delay !== undefined && <div>

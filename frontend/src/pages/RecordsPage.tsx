@@ -13,6 +13,7 @@ export function RecordsPage() {
   const [statusFilter, setStatusFilter] = useState('All');
   const [categoryFilter, setCategoryFilter] = useState('All');
   const [searchTerm, setSearchTerm] = useState('');
+  const [sortOrder, setSortOrder] = useState('none');
 
   const handleDelete = () => {
     (async () => {
@@ -56,12 +57,23 @@ export function RecordsPage() {
     };
     load();
   }, []);
-  const filteredRecords = records.filter(record => {
-    const statusMatch = statusFilter === 'All' || record.status === statusFilter;
-    const categoryMatch = categoryFilter === 'All' || record.category === categoryFilter;
-    const searchMatch = record.tenderNumber.toLowerCase().includes(searchTerm.toLowerCase());
-    return statusMatch && categoryMatch && searchMatch;
-  });
+
+  const filteredRecords = records
+    .filter(record => {
+      const statusMatch = statusFilter === 'All' || record.status === statusFilter;
+      const categoryMatch = categoryFilter === 'All' || record.category === categoryFilter;
+      const searchMatch = record.tenderNumber.toLowerCase().includes(searchTerm.toLowerCase());
+      return statusMatch && categoryMatch && searchMatch;
+    })
+    .sort((a, b) => {
+      if (sortOrder === 'asc') {
+        return a.tenderNumber.localeCompare(b.tenderNumber);
+      } else if (sortOrder === 'desc') {
+        return b.tenderNumber.localeCompare(a.tenderNumber);
+      }
+      return 0;
+    });
+
   const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
       'Under Evaluation': 'bg-amber-100 text-amber-800',
@@ -101,7 +113,7 @@ export function RecordsPage() {
       {/* Filters */}
       <div className="flex-shrink-0 bg-white rounded-lg shadow-sm border border-slate-200 p-4">
         <div className="flex flex-col sm:flex-row gap-4">
-          <div className="flex-1 min-w-[300px]">
+          <div className="flex-1 min-w-[200px]">
             <input 
               type="text" 
               placeholder="Search by Tender Number..." 
@@ -110,9 +122,24 @@ export function RecordsPage() {
               onChange={e => setSearchTerm(e.target.value)} 
             />
           </div>
+          <Select className="w-full sm:w-48" options={[
+        //     {
+        //   value: 'none',
+        //   label: 'Sort By'
+        // }, 
+        {
+          value: 'asc',
+          label: 'Tender Number: A-Z'
+        }, {
+          value: 'desc',
+          label: 'Tender Number: Z-A'
+        }]} value={sortOrder} onChange={e => setSortOrder(e.target.value)} />
           <Select className="w-full sm:w-48" options={[{
           value: 'All',
           label: 'All Status'
+        }, {
+          value: 'Awarded',
+          label: 'Awarded'
         }, {
           value: 'Awarded',
           label: 'Awarded'
@@ -161,59 +188,59 @@ export function RecordsPage() {
       </div>
 
       {/* Table Section */}
-      <div className="flex-1 min-h-0 bg-white/90 backdrop-blur-sm rounded-xl shadow-lg border border-white/20 overflow-hidden ring-1 ring-slate-200 flex flex-col">
+      <div className="flex-1 min-h-0 bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden flex flex-col">
         <div className="flex-1 overflow-auto custom-scrollbar">
-          <table className="w-full text-sm text-left min-w-[1800px]">
-            <thead className="text-xs text-slate-500 uppercase bg-slate-50 border-b border-slate-200 sticky top-0 z-20">
+          <table className="w-full text-sm text-left min-w-[1800px] border-separate border-spacing-0">
+            <thead className="text-xs text-slate-500 uppercase bg-slate-50 sticky top-0 z-20">
               <tr>
-                <th className="px-4 py-3 font-medium whitespace-nowrap">
+                <th className="px-6 py-4 font-semibold whitespace-nowrap border-b border-slate-200 bg-slate-50">
                   Tender No
                 </th>
-                <th className="px-4 py-3 font-medium whitespace-nowrap">
+                <th className="px-6 py-4 font-semibold whitespace-nowrap border-b border-slate-200 bg-slate-50">
                   Department
                 </th>
-                <th className="px-4 py-3 font-medium whitespace-nowrap">
+                <th className="px-6 py-4 font-semibold whitespace-nowrap border-b border-slate-200 bg-slate-50">
                   Category
                 </th>
-                <th className="px-4 py-3 font-medium whitespace-nowrap">
+                <th className="px-6 py-4 font-semibold whitespace-nowrap border-b border-slate-200 bg-slate-50">
                   Description
                 </th>
-                <th className="px-4 py-3 font-medium whitespace-nowrap">
+                <th className="px-6 py-4 font-semibold whitespace-nowrap border-b border-slate-200 bg-slate-50">
                   Bid Start
                 </th>
-                <th className="px-4 py-3 font-medium whitespace-nowrap">
+                <th className="px-6 py-4 font-semibold whitespace-nowrap border-b border-slate-200 bg-slate-50">
                   Bid Open
                 </th>
-                <th className="px-4 py-3 font-medium whitespace-nowrap">
+                <th className="px-6 py-4 font-semibold whitespace-nowrap border-b border-slate-200 bg-slate-50">
                   Bid Close
                 </th>
-                <th className="px-4 py-3 font-medium whitespace-nowrap">
+                <th className="px-6 py-4 font-semibold whitespace-nowrap border-b border-slate-200 bg-slate-50">
                   File Sent TEC
                 </th>
-                <th className="px-4 py-3 font-medium whitespace-nowrap">
+                <th className="px-6 py-4 font-semibold whitespace-nowrap border-b border-slate-200 bg-slate-50">
                   Bond Number
                 </th>
-                <th className="px-4 py-3 font-medium whitespace-nowrap">
+                <th className="px-6 py-4 font-semibold whitespace-nowrap border-b border-slate-200 bg-slate-50">
                   Bank/PIV
                 </th>
-                <th className="px-4 py-3 font-medium whitespace-nowrap">
+                <th className="px-6 py-4 font-semibold whitespace-nowrap border-b border-slate-200 bg-slate-50">
                   Status
                 </th>
-                <th className="px-4 py-3 font-medium whitespace-nowrap">
-                  TEC Chairman
+                <th className="px-6 py-4 font-semibold whitespace-nowrap border-b border-slate-200 bg-slate-50">
+                  TEC Team
                 </th>
-                <th className="px-4 py-3 font-medium whitespace-nowrap">
+                <th className="px-6 py-4 font-semibold whitespace-nowrap border-b border-slate-200 bg-slate-50">
                   Awarded To
                 </th>
-                <th className="px-4 py-3 font-medium whitespace-nowrap">
+                <th className="px-6 py-4 font-semibold whitespace-nowrap border-b border-slate-200 bg-slate-50">
                   Delay
                 </th>
-                <th className="px-4 py-3 font-medium whitespace-nowrap sticky right-0 bg-slate-50 z-20 shadow-[-4px_0_12px_-4px_rgba(0,0,0,0.1)]">
+                <th className="px-6 py-4 font-semibold whitespace-nowrap sticky right-0 bg-slate-50 z-30 shadow-[-4px_0_12px_-4px_rgba(0,0,0,0.1)] border-b border-slate-200">
                   Actions
                 </th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-slate-100">
               {filteredRecords.length > 0 ? filteredRecords.map((record, idx) => <tr key={record.id} className={`border-b border-slate-100 last:border-0 hover:bg-slate-50 transition-colors ${idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'}`}>
                     <td className="px-4 py-3 font-medium text-slate-900 whitespace-nowrap">
                       {record.tenderNumber}
@@ -253,7 +280,12 @@ export function RecordsPage() {
                       </span>
                     </td>
                     <td className="px-4 py-3 text-slate-700 whitespace-nowrap">
-                      {record.tecChairman}
+                      <div className="flex flex-col">
+                        <span className="font-semibold">{record.tecChairman}</span>
+                        <span className="text-[10px] text-slate-500 uppercase">
+                          + {(record.tecMember1 ? 1 : 0) + (record.tecMember2 ? 1 : 0) + (record.tecAdditionalMembers?.length || 0)} members
+                        </span>
+                      </div>
                     </td>
                     <td className="px-4 py-3 text-slate-700 whitespace-nowrap">
                       {record.awardedTo || '-'}

@@ -1,6 +1,6 @@
 // React not required with the new JSX transform
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, FileText, Plus, Users, UserPlus, Building2, Download, LogOut, SquareLibrary, Menu, FolderOpen, Briefcase, Gavel, Shield, FileSearch } from 'lucide-react';
+import { LayoutDashboard, FileText, Plus, Users, UserPlus, Building2, Download, LogOut, Menu, FolderOpen, Briefcase, Gavel, Shield, FileSearch } from 'lucide-react';
 interface SidebarProps {
   isOpen: boolean;  
   setIsOpen: (isOpen: boolean) => void;

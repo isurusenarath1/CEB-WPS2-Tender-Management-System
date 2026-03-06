@@ -1,6 +1,6 @@
 const bcrypt = require('bcryptjs');
 const User = require('../models/User');
-const AuditLog = require('../models/AuditLog');
+const { logAction } = require('../utils/auditUtils');
 
 exports.list = async (req, res, next) => {
   try {
@@ -17,7 +17,7 @@ exports.create = async (req, res, next) => {
     if (existing) return res.status(400).json({ message: 'Email already registered' });
     const hash = await bcrypt.hash(password, 10);
     const user = await User.create({ name, email, password: hash, role, status });
-    await AuditLog.create({ user: req.user?.email, type: 'create:user', message: `Created user ${email}` });
+    await logAction(req.user?.email, 'Create', `Created user account: ${email}`, req);
     res.status(201).json({ id: user._id, name: user.name, email: user.email, role: user.role });
   } catch (err) { next(err); }
 };
@@ -35,13 +35,19 @@ exports.update = async (req, res, next) => {
     const updateData = { ...req.body };
     if (updateData.password) updateData.password = await bcrypt.hash(updateData.password, 10);
     const user = await User.findByIdAndUpdate(req.params.id, updateData, { new: true }).select('-password');
+    if (user) {
+      await logAction(req.user?.email, 'Update', `Updated user account: ${user.email}`, req);
+    }
     res.json(user);
   } catch (err) { next(err); }
 };
 
 exports.remove = async (req, res, next) => {
   try {
-    await User.findByIdAndDelete(req.params.id);
+    const user = await User.findByIdAndDelete(req.params.id);
+    if (user) {
+      await logAction(req.user?.email, 'Delete', `Deleted user account: ${user.email}`, req);
+    }
     res.json({ message: 'Deleted' });
   } catch (err) { next(err); }
 };

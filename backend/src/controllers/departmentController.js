@@ -1,5 +1,5 @@
 const Department = require('../models/Department');
-const AuditLog = require('../models/AuditLog');
+const { logAction } = require('../utils/auditUtils');
 
 exports.list = async (req, res, next) => {
   try {
@@ -11,11 +11,7 @@ exports.list = async (req, res, next) => {
 exports.create = async (req, res, next) => {
   try {
     const item = await Department.create(req.body);
-    await AuditLog.create({ 
-      user: req.user?.email, 
-      type: 'create:department', 
-      message: `Created department ${item.name} (${item.code})` 
-    });
+    await logAction(req.user?.email, 'Create', `Created department ${item.name} (${item.code})`, req);
     res.status(201).json(item);
   } catch (err) { 
     next(err); 
@@ -35,11 +31,7 @@ exports.update = async (req, res, next) => {
     const item = await Department.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
     if (!item) return res.status(404).json({ message: 'Not found' });
     
-    await AuditLog.create({ 
-      user: req.user?.email, 
-      type: 'update:department', 
-      message: `Updated department ${item.name}` 
-    });
+    await logAction(req.user?.email, 'Update', `Updated department ${item.name}`, req);
     res.json(item);
   } catch (err) { 
     next(err); 
@@ -50,11 +42,7 @@ exports.remove = async (req, res, next) => {
   try {
     const item = await Department.findByIdAndDelete(req.params.id);
     if (item) {
-      await AuditLog.create({ 
-        user: req.user?.email, 
-        type: 'delete:department', 
-        message: `Deleted department ${item.name}` 
-      });
+      await logAction(req.user?.email, 'Delete', `Deleted department ${item.name}`, req);
     }
     res.json({ message: 'Deleted' });
   } catch (err) { next(err); }

@@ -36,6 +36,7 @@ export interface Record {
   tecChairman: string; // Staff (from dropdown)
   tecMember1: string; // Staff (from dropdown)
   tecMember2: string; // Acc Assistant (from dropdown)
+  tecAdditionalMembers?: string[];
   delay?: number; // Auto-generated after status = Awarded
 
   // Selected Bidder Details

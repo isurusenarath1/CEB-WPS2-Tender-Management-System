@@ -1,5 +1,5 @@
 const Category = require('../models/Category');
-const AuditLog = require('../models/AuditLog');
+const { logAction } = require('../utils/auditUtils');
 
 exports.list = async (req, res, next) => {
   try {
@@ -11,11 +11,7 @@ exports.list = async (req, res, next) => {
 exports.create = async (req, res, next) => {
   try {
     const item = await Category.create(req.body);
-    await AuditLog.create({ 
-      user: req.user?.email, 
-      type: 'create:category', 
-      message: `Created category ${item.name}` 
-    });
+    await logAction(req.user?.email, 'Create', `Created category ${item.name}`, req);
     res.status(201).json(item);
   } catch (err) { 
     if (err.code === 11000) {
@@ -38,11 +34,7 @@ exports.update = async (req, res, next) => {
     const item = await Category.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
     if (!item) return res.status(404).json({ message: 'Not found' });
     
-    await AuditLog.create({ 
-      user: req.user?.email, 
-      type: 'update:category', 
-      message: `Updated category ${item.name}` 
-    });
+    await logAction(req.user?.email, 'Update', `Updated category ${item.name}`, req);
     res.json(item);
   } catch (err) { 
     if (err.code === 11000) {
@@ -56,11 +48,7 @@ exports.remove = async (req, res, next) => {
   try {
     const item = await Category.findByIdAndDelete(req.params.id);
     if (item) {
-      await AuditLog.create({ 
-        user: req.user?.email, 
-        type: 'delete:category', 
-        message: `Deleted category ${item.name}` 
-      });
+      await logAction(req.user?.email, 'Delete', `Deleted category ${item.name}`, req);
     }
     res.json({ message: 'Deleted' });
   } catch (err) { next(err); }

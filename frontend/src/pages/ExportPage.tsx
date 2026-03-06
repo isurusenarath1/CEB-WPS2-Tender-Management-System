@@ -1,24 +1,148 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Download, FileText, FileSpreadsheet, Calendar } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Select } from '../components/ui/Select';
 import { DatePicker } from '../components/ui/DatePicker';
+import * as XLSX from 'xlsx';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
 export function ExportPage() {
   const [exportFormat, setExportFormat] = useState('excel');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [category, setCategory] = useState('All');
   const [status, setStatus] = useState('All');
-  const handleExportRecords = () => {
-    console.log('Exporting system records...', {
-      exportFormat,
-      dateFrom,
-      dateTo,
-      category,
-      status
-    });
-    // Simulate download
-    alert(`Downloading System Records as ${exportFormat.toUpperCase()}...`);
+  const [categories, setCategories] = useState<{ value: string; label: string }[]>([]);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const token = sessionStorage.getItem('authToken') || sessionStorage.getItem('mock-auth-token');
+        const res = await fetch('/api/categories', {
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const mappedCategories = Array.isArray(data) ? data.map((c: any) => ({
+            value: c.name,
+            label: c.name
+          })) : [];
+          setCategories([{ value: 'All', label: 'All Categories' }, ...mappedCategories]);
+        }
+      } catch (err) {
+        console.error('Failed to fetch categories', err);
+      }
+    };
+    fetchCategories();
+  }, []);
+  const handleExportRecords = async () => {
+    try {
+      const token = sessionStorage.getItem('authToken') || sessionStorage.getItem('mock-auth-token');
+      const res = await fetch('/api/records', {
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined
+      });
+      
+      if (!res.ok) throw new Error('Failed to fetch records');
+      const allRecords = await res.json();
+
+      // Filter records
+      const filteredRecords = allRecords.filter((rec: any) => {
+        const matchesCategory = category === 'All' || rec.category === category;
+        const matchesStatus = status === 'All' || rec.status === status;
+        
+        let matchesDate = true;
+        if (dateFrom || dateTo) {
+          const createdAt = new Date(rec.createdAt).getTime();
+          if (dateFrom) {
+            matchesDate = matchesDate && createdAt >= new Date(dateFrom).getTime();
+          }
+          if (dateTo) {
+            // Include the whole 'to' day
+            const toDate = new Date(dateTo);
+            toDate.setHours(23, 59, 59, 999);
+            matchesDate = matchesDate && createdAt <= toDate.getTime();
+          }
+        }
+        
+        return matchesCategory && matchesStatus && matchesDate;
+      });
+
+      if (filteredRecords.length === 0) {
+        alert('No records found matching the selected filters.');
+        return;
+      }
+
+      // Format data for export
+      const exportData = filteredRecords.map((rec: any) => ({
+        'Tender Number': rec.tenderNumber,
+        'Relevant To': rec.relevantTo,
+        'Category': rec.category,
+        'Description': rec.description,
+        'Status': rec.status,
+        'Bid Start Date': rec.bidStartDate ? new Date(rec.bidStartDate).toLocaleDateString() : '',
+        'Bid Open Date': rec.bidOpenDate ? new Date(rec.bidOpenDate).toLocaleDateString() : '',
+        'Bid Closing Date': rec.bidClosingDate ? new Date(rec.bidClosingDate).toLocaleDateString() : '',
+        'Approved Date': rec.approvedDate ? new Date(rec.approvedDate).toLocaleDateString() : '',
+        'TEC Committee': rec.tecCommitteeNumber,
+        'TEC Chairman': rec.tecChairman,
+        'Awarded To': rec.awardedTo,
+        'Remark': rec.remark
+      }));
+
+      const fileName = `System_Records_${new Date().toISOString().split('T')[0]}`;
+
+      if (exportFormat === 'excel') {
+        const ws = XLSX.utils.json_to_sheet(exportData);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Records');
+        XLSX.writeFile(wb, `${fileName}.xlsx`);
+      } else if (exportFormat === 'csv') {
+        const ws = XLSX.utils.json_to_sheet(exportData);
+        const csv = XLSX.utils.sheet_to_csv(ws);
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.setAttribute('download', `${fileName}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } else if (exportFormat === 'pdf') {
+        const doc = new jsPDF('l', 'mm', 'a4');
+        doc.text('Tender Management System - Records Export', 14, 15);
+        doc.setFontSize(10);
+        doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 22);
+        
+        autoTable(doc, {
+          head: [Object.keys(exportData[0])],
+          body: exportData.map((row: any) => Object.values(row)),
+          startY: 25,
+          styles: { fontSize: 8 },
+          headStyles: { fillColor: [189, 93, 42] } // CEB Orange
+        });
+        
+        doc.save(`${fileName}.pdf`);
+      }
+
+      // Log the export action
+      try {
+        await fetch('/api/audits', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: token ? `Bearer ${token}` : ''
+          },
+          body: JSON.stringify({
+            type: 'Export',
+            message: `Exported system records as ${exportFormat.toUpperCase()} (Category: ${category}, Status: ${status}, Date Range: ${dateFrom || 'All'} to ${dateTo || 'All'})`
+          })
+        });
+      } catch (logErr) {
+        console.error('Failed to log export action', logErr);
+      }
+    } catch (err) {
+      console.error('Export failed:', err);
+      alert('Failed to export records. Please try again.');
+    }
   };
   const handleDownloadTechnicalGood = () => {
     console.log('Downloading Technical Evaluation Good document...');
@@ -68,7 +192,7 @@ export function ExportPage() {
             label: 'PDF (.pdf)'
           }]} />
 
-            <Select label="Category Filter" value={category} onChange={e => setCategory(e.target.value)} options={[{
+            <Select label="Category Filter" value={category} onChange={e => setCategory(e.target.value)} options={categories.length > 0 ? categories : [{
             value: 'All',
             label: 'All Categories'
           }, {
@@ -89,20 +213,32 @@ export function ExportPage() {
             value: 'All',
             label: 'All Status'
           }, {
-            value: 'Under Evacuation',
-            label: 'Under Evacuation'
+            value: 'Awarded',
+            label: 'Awarded'
+          }, {
+            value: 'Cancel',
+            label: 'Cancel'
+          }, {
+            value: 'Close',
+            label: 'Close'
           }, {
             value: 'Doc Review',
             label: 'Doc Review'
           }, {
-            value: 'Awarded',
-            label: 'Awarded'
+            value: 'Negotiate or Clarification',
+            label: 'Negotiate or Clarification'
+          }, {
+            value: 'Re-evaluation',
+            label: 'Re-evaluation'
           }, {
             value: 'Reject',
             label: 'Reject'
           }, {
-            value: 'Close',
-            label: 'Close'
+            value: 'Retender',
+            label: 'Retender'
+          }, {
+            value: 'Under Evaluation',
+            label: 'Under Evaluation'
           }]} />
 
             <div className="flex items-end">

@@ -56,26 +56,29 @@ export function DataTable<T extends {
       </div>
 
       {/* Table Content */}
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm text-left">
-          <thead className="text-xs text-slate-500 uppercase bg-slate-50 border-b border-slate-200">
+      <div className="flex-1 overflow-auto custom-scrollbar min-h-[400px]">
+        <table className="w-full text-sm text-left border-separate border-spacing-0">
+          <thead className="text-xs text-slate-500 uppercase bg-slate-50 sticky top-0 z-10">
             <tr>
-              {columns.map((col, idx) => <th key={idx} className="px-6 py-3 font-medium whitespace-nowrap">
+              {columns.map((col, idx) => <th key={idx} className="px-6 py-4 font-semibold whitespace-nowrap border-b border-slate-200 bg-slate-50/90 backdrop-blur-sm">
                   <div className="flex items-center gap-2">{col.header}</div>
                 </th>)}
             </tr>
           </thead>
-          <tbody>
+          <tbody className="divide-y divide-slate-100">
             {paginatedData.length > 0 ? paginatedData.map((item, rowIdx) => <tr key={item.id} className={`
-                    border-b border-slate-100 last:border-0 hover:bg-slate-50 transition-colors
-                    ${rowIdx % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'}
+                    hover:bg-slate-50 transition-colors
+                    ${rowIdx % 2 === 0 ? 'bg-white' : 'bg-slate-50/30'}
                   `}>
-                  {columns.map((col, colIdx) => <td key={colIdx} className="px-6 py-4 text-slate-700">
+                  {columns.map((col, colIdx) => <td key={colIdx} className="px-6 py-4 text-slate-700 font-medium">
                       {col.cell ? col.cell(item) : typeof col.accessorKey === 'function' ? col.accessorKey(item) : item[col.accessorKey] as React.ReactNode}
                     </td>)}
                 </tr>) : <tr>
-                <td colSpan={columns.length} className="px-6 py-8 text-center text-slate-500">
-                  No records found.
+                <td colSpan={columns.length} className="px-6 py-12 text-center text-slate-500">
+                  <div className="flex flex-col items-center gap-2">
+                    <span className="text-lg font-medium">No results found</span>
+                    <p className="text-sm">Try adjusting your filters or search term</p>
+                  </div>
                 </td>
               </tr>}
           </tbody>

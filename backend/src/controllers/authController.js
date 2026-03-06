@@ -1,7 +1,7 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
-const AuditLog = require('../models/AuditLog');
+const { logAction } = require('../utils/auditUtils');
 
 exports.register = async (req, res, next) => {
   try {
@@ -11,7 +11,7 @@ exports.register = async (req, res, next) => {
     if (existing) return res.status(400).json({ message: 'Email already registered' });
     const hash = await bcrypt.hash(password, 10);
     const user = await User.create({ name, email, password: hash, role });
-    await AuditLog.create({ user: email, type: 'register', message: `User registered: ${email}` });
+    await logAction(email, 'Login', `User registered: ${email}`, req);
     res.status(201).json({ id: user._id, name: user.name, email: user.email, role: user.role });
   } catch (err) { next(err); }
 };
@@ -27,7 +27,7 @@ exports.login = async (req, res, next) => {
     const token = jwt.sign(payload, process.env.JWT_SECRET || 'secret', { expiresIn: '8h' });
     user.lastLogin = new Date();
     await user.save();
-    await AuditLog.create({ user: email, type: 'login', message: `User logged in: ${email}` });
+    await logAction(email, 'Login', `User logged in: ${email}`, req);
     res.json({ token, user: payload });
   } catch (err) { next(err); }
 };

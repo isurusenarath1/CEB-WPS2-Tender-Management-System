@@ -1,5 +1,5 @@
 // React import not required with new JSX transform
-import { Menu, Bell, User } from 'lucide-react';
+import { Menu, User } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 interface HeaderProps {
   onMenuClick: () => void;
@@ -39,8 +39,8 @@ export function Header({
         </button> */}
         <div className="flex items-center gap-3 pl-4 border-l border-slate-200">
           <div className="text-right hidden sm:block">
-            <p className="text-sm font-medium text-slate-900">Admin User</p>
-            <p className="text-xs text-slate-500">testadmin@tec.gov</p>
+            <p className="text-sm font-medium text-slate-900">{sessionStorage.getItem('user') ? JSON.parse(sessionStorage.getItem('user')!).name || 'Admin User' : 'Admin User'}</p>
+            <p className="text-xs text-slate-500">{sessionStorage.getItem('user') ? JSON.parse(sessionStorage.getItem('user')!).email || 'testadmin@tec.gov' : 'testadmin@tec.gov'}</p>
           </div>
           <div className="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center">
             <User className="w-5 h-5" />

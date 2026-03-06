@@ -21,6 +21,7 @@ const recordSchema = new mongoose.Schema({
   tecChairman: { type: String },
   tecMember1: { type: String },
   tecMember2: { type: String },
+  tecAdditionalMembers: [{ type: String }],
   awardedTo: { type: String },
   serviceAgreementStartDate: { type: Date },
   serviceAgreementEndDate: { type: Date },

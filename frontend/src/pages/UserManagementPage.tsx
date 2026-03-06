@@ -105,8 +105,8 @@ export function UserManagementPage() {
           </button>
         </div>
   }];
-  return <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+  return <div className="h-[calc(100vh-140px)] flex flex-col gap-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 flex-shrink-0">
         <div>
           <h2 className="text-2xl font-bold text-slate-900">User Management</h2>
           <p className="text-slate-500">
@@ -118,37 +118,39 @@ export function UserManagementPage() {
         </Button>
       </div>
 
-      <DataTable data={filteredUsers} columns={columns} searchKey="name" searchPlaceholder="Search by name..." filters={<div className="flex gap-2">
-            <Select className="w-32" options={[{
-        value: 'All',
-        label: 'All Roles'
-      }, {
-        value: 'Super Admin',
-        label: 'Super Admin'
-      }, {
-        value: 'Admin',
-        label: 'Admin'
-      }, {
-        value: 'Clerk 1',
-        label: 'Clerk 1'
-      }, {
-        value: 'Clerk 2',
-        label: 'Clerk 2'
-      }, {
-        value: 'Clerk 3',
-        label: 'Clerk 3'
-      }]} value={roleFilter} onChange={e => setRoleFilter(e.target.value)} />
-            <Select className="w-32" options={[{
-        value: 'All',
-        label: 'All Status'
-      }, {
-        value: 'Active',
-        label: 'Active'
-      }, {
-        value: 'Inactive',
-        label: 'Inactive'
-      }]} value={statusFilter} onChange={e => setStatusFilter(e.target.value)} />
-          </div>} />
+      <div className="flex-1 min-h-0">
+        <DataTable data={filteredUsers} columns={columns} searchKey="name" searchPlaceholder="Search by name..." filters={<div className="flex gap-2">
+              <Select className="w-32" options={[{
+          value: 'All',
+          label: 'All Roles'
+        }, {
+          value: 'Super Admin',
+          label: 'Super Admin'
+        }, {
+          value: 'Admin',
+          label: 'Admin'
+        }, {
+          value: 'Clerk 1',
+          label: 'Clerk 1'
+        }, {
+          value: 'Clerk 2',
+          label: 'Clerk 2'
+        }, {
+          value: 'Clerk 3',
+          label: 'Clerk 3'
+        }]} value={roleFilter} onChange={e => setRoleFilter(e.target.value)} />
+              <Select className="w-32" options={[{
+          value: 'All',
+          label: 'All Status'
+        }, {
+          value: 'Active',
+          label: 'Active'
+        }, {
+          value: 'Inactive',
+          label: 'Inactive'
+        }]} value={statusFilter} onChange={e => setStatusFilter(e.target.value)} />
+            </div>} />
+      </div>
 
       <Modal isOpen={!!deleteId} onClose={() => setDeleteId(null)} title="Delete User" footer={<>
             <Button variant="ghost" onClick={() => setDeleteId(null)}>

@@ -75,8 +75,8 @@ export function BidderListPage() {
           </button>
         </div>
   }];
-  return <div className="space-y-6">
-      <div className="flex justify-between items-center">
+  return <div className="h-[calc(100vh-140px)] flex flex-col gap-6">
+      <div className="flex justify-between items-center flex-shrink-0">
         <div>
           <h2 className="text-2xl font-bold text-slate-900">
             Registered suppliers (bidder)
@@ -90,7 +90,9 @@ export function BidderListPage() {
         </Button>
       </div>
 
-      <DataTable data={bidders} columns={columns} searchKey="name" searchPlaceholder="Search suppliers..." />
+      <div className="flex-1 min-h-0">
+        <DataTable data={bidders} columns={columns} searchKey="name" searchPlaceholder="Search suppliers..." />
+      </div>
 
       <Modal isOpen={!!deleteId} onClose={() => setDeleteId(null)} title="Remove Supplier" footer={<>
             <Button variant="ghost" onClick={() => setDeleteId(null)}>
