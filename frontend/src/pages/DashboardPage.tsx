@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { FileText, Clock, CheckCircle, AlertCircle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { FileText, Clock, CheckCircle, AlertCircle, Search, MessageSquare } from 'lucide-react';
 import { KpiCard } from '../components/dashboard/KpiCard';
 import { PieChart } from '../components/dashboard/PieChart';
 import { BarChart } from '../components/dashboard/BarChart';
@@ -7,6 +8,7 @@ import { AgingTable } from '../components/dashboard/AgingTable';
 import { Record as TmsRecord } from '../utils/types';
 
 export function DashboardPage() {
+  const navigate = useNavigate();
   const [records, setRecords] = useState<TmsRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -39,25 +41,30 @@ export function DashboardPage() {
   const awarded = records.filter(r => (r.status || '').toString().toLowerCase() === 'awarded').length;
   const retender = records.filter(r => (r.status || '').toString().toLowerCase() === 'retender').length;
   const reEvaluation = records.filter(r => (r.status || '').toString().toLowerCase().includes('re-evaluation')).length;
+  const docReview = records.filter(r => (r.status || '').toString().toLowerCase().includes('doc review')).length;
+  const negotiate = records.filter(r => (r.status || '').toString().toLowerCase().includes('negotiate') || (r.status || '').toString().toLowerCase().includes('clarification')).length;
   
-  // Rejected card now includes Cancel and Close
+  // Individual status counts for Reject, Cancel, Close
   const rejectCount = records.filter(r => {
     const s = (r.status || '').toString().toLowerCase();
     return s === 'reject' || s === 'rejected';
   }).length;
   const cancelCount = records.filter(r => (r.status || '').toString().toLowerCase().includes('cancel')).length;
   const closeCount = records.filter(r => (r.status || '').toString().toLowerCase().includes('close')).length;
-  const rejectedTotal = rejectCount + cancelCount + closeCount;
 
-  const rejectedBreakdown = [
-    { label: 'Rejected', value: rejectCount },
-    { label: 'Cancelled', value: cancelCount },
-    { label: 'Closed', value: closeCount }
-  ];
-
-  // Pie Chart Data
+  // Pie Chart Data - Normalized to match KPI cards
   const statusCounts = records.reduce((acc, record) => {
-    acc[record.status] = (acc[record.status] || 0) + 1;
+    const s = (record.status || '').toString().toLowerCase();
+    let normalizedStatus = record.status || 'Unknown';
+    
+    if (s.includes('cancel')) normalizedStatus = 'Cancel';
+    else if (s.includes('close')) normalizedStatus = 'Close';
+    else if (s.includes('reject')) normalizedStatus = 'Reject';
+    else if (s.includes('evaluation')) normalizedStatus = 'Under Evaluation';
+    else if (s.includes('awarded')) normalizedStatus = 'Awarded';
+    else if (s.includes('retender')) normalizedStatus = 'Retender';
+    
+    acc[normalizedStatus] = (acc[normalizedStatus] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
   const pieData = Object.entries(statusCounts).map(([name, value]) => ({
@@ -124,6 +131,10 @@ export function DashboardPage() {
     count: agingBuckets['90+'],
     color: 'bg-red-100 text-red-800'
   }];
+  
+  const handleCardClick = (status: string) => {
+    navigate(`/records?status=${encodeURIComponent(status)}`);
+  };
 
   if (isLoading) {
     return <div className="flex items-center justify-center p-12 h-full">
@@ -132,20 +143,17 @@ export function DashboardPage() {
   }
   return <div className="space-y-6">
       {/* KPI Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
-        <KpiCard title="Total Records" value={total} icon={FileText} color="blue" trend="+12% from last month" />
-        <KpiCard title="Under Evaluation" value={underEvaluation} icon={Clock} color="amber" trend="Requires attention" />
-        <KpiCard title="Awarded" value={awarded} icon={CheckCircle} color="green" trend="Steady progress" />
-        <KpiCard title="Retender" value={retender} icon={Clock} color="amber" trend="Action required" />
-        <KpiCard title="Re evaluation" value={reEvaluation} icon={Clock} color="amber" trend="In progress" />
-        <KpiCard 
-          title="Rejected" 
-          value={rejectedTotal} 
-          icon={AlertCircle} 
-          color="red" 
-          trend="Total count" 
-          breakdown={rejectedBreakdown}
-        />
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 xl:grid-cols-5 gap-6">
+        <KpiCard title="Total Records" value={total} icon={FileText} color="blue" trend="+12% from last month" onClick={() => handleCardClick('All')} />
+        <KpiCard title="Under Evaluation" value={underEvaluation} icon={Clock} color="amber" trend="Requires attention" onClick={() => handleCardClick('Under Evaluation')} />
+        <KpiCard title="Awarded" value={awarded} icon={CheckCircle} color="green" trend="Steady progress" onClick={() => handleCardClick('Awarded')} />
+        <KpiCard title="Retender" value={retender} icon={Clock} color="amber" trend="Action required" onClick={() => handleCardClick('Retender')} />
+        <KpiCard title="Re evaluation" value={reEvaluation} icon={Clock} color="amber" trend="In progress" onClick={() => handleCardClick('Re-evaluation')} />
+        <KpiCard title="Doc Review" value={docReview} icon={Search} color="blue" trend="Documentation" onClick={() => handleCardClick('Doc Review')} />
+        <KpiCard title="Negotiation" value={negotiate} icon={MessageSquare} color="amber" trend="Clarifications" onClick={() => handleCardClick('Negotiate or Clarification')} />
+        <KpiCard title="Reject" value={rejectCount} icon={AlertCircle} color="red" trend="Not accepted" onClick={() => handleCardClick('Reject')} />
+        <KpiCard title="Cancel" value={cancelCount} icon={AlertCircle} color="red" trend="Withdrawn" onClick={() => handleCardClick('Cancel')} />
+        <KpiCard title="Close" value={closeCount} icon={AlertCircle} color="red" trend="Finalized" onClick={() => handleCardClick('Close')} />
       </div>
 
       {/* Visualizations Grid (2x2) */}

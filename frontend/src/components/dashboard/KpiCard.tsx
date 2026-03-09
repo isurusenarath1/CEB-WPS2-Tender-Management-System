@@ -7,6 +7,7 @@ interface KpiCardProps {
   trend?: string;
   color?: 'blue' | 'green' | 'amber' | 'red';
   breakdown?: { label: string; value: number }[];
+  onClick?: () => void;
 }
 export function KpiCard({
   title,
@@ -14,7 +15,8 @@ export function KpiCard({
   icon: Icon,
   trend,
   color = 'blue',
-  breakdown
+  breakdown,
+  onClick
 }: KpiCardProps) {
   const [showPopup, setShowPopup] = useState(false);
   
@@ -25,9 +27,10 @@ export function KpiCard({
     red: 'bg-red-50 text-red-600'
   };
   return <div 
-      className={`bg-white rounded-xl p-6 shadow-sm border border-slate-200 relative group cursor-default transition-all duration-200 ${showPopup ? 'z-[100] shadow-md ring-1 ring-blue-100' : 'z-10'}`}
+      className={`bg-white rounded-xl p-6 shadow-sm border border-slate-200 relative group transition-all duration-200 ${onClick ? 'cursor-pointer hover:shadow-md hover:border-blue-200' : 'cursor-default'} ${showPopup ? 'z-[100] shadow-md ring-1 ring-blue-100' : 'z-10'}`}
       onMouseEnter={() => setShowPopup(true)}
       onMouseLeave={() => setShowPopup(false)}
+      onClick={onClick}
     >
       <div className="flex items-center justify-between">
         <div>

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Search, Loader2, Calendar } from 'lucide-react';
+import { Search, Loader2 } from 'lucide-react';
 import { AuditLog } from '../utils/types';
 import { DatePicker } from '../components/ui/DatePicker';
 

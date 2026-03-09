@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Edit2, Trash2, Plus, Eye } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Select } from '../components/ui/Select';
@@ -8,10 +8,13 @@ import { Record as TmsRecord } from '../utils/types';
 
 export function RecordsPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const initialStatus = searchParams.get('status') || 'All';
   const [records, setRecords] = useState<TmsRecord[]>([]);
   const [deleteId, setDeleteId] = useState<string | null>(null);
-  const [statusFilter, setStatusFilter] = useState('All');
+  const [statusFilter, setStatusFilter] = useState(initialStatus);
   const [categoryFilter, setCategoryFilter] = useState('All');
+  const [categories, setCategories] = useState<{ id: string, name: string }[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortOrder, setSortOrder] = useState('none');
 
@@ -58,9 +61,42 @@ export function RecordsPage() {
     load();
   }, []);
 
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const token = sessionStorage.getItem('authToken') || sessionStorage.getItem('mock-auth-token');
+        const res = await fetch('/api/categories', {
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setCategories(data.map((c: any) => ({ id: c._id || c.id, name: c.name })));
+        }
+      } catch (err) {
+        console.error('Failed to fetch categories', err);
+      }
+    };
+    fetchCategories();
+  }, []);
+
   const filteredRecords = records
     .filter(record => {
-      const statusMatch = statusFilter === 'All' || record.status === statusFilter;
+      const s = (record.status || '').toString().toLowerCase();
+      const f = statusFilter.toLowerCase();
+      
+      let statusMatch = statusFilter === 'All';
+      if (!statusMatch) {
+        if (f === 'cancel') {
+          statusMatch = s.includes('cancel');
+        } else if (f === 'close') {
+          statusMatch = s.includes('close');
+        } else if (f === 'reject') {
+          statusMatch = s.includes('reject');
+        } else {
+          statusMatch = s === f;
+        }
+      }
+      
       const categoryMatch = categoryFilter === 'All' || record.category === categoryFilter;
       const searchMatch = record.tenderNumber.toLowerCase().includes(searchTerm.toLowerCase());
       return statusMatch && categoryMatch && searchMatch;
@@ -141,9 +177,6 @@ export function RecordsPage() {
           value: 'Awarded',
           label: 'Awarded'
         }, {
-          value: 'Awarded',
-          label: 'Awarded'
-        }, {
           value: 'Cancel',
           label: 'Cancel'
         }, {
@@ -171,19 +204,7 @@ export function RecordsPage() {
           <Select className="w-full sm:w-48" options={[{
           value: 'All',
           label: 'All Categories'
-        }, {
-          value: 'Goods',
-          label: 'Goods'
-        }, {
-          value: 'Services',
-          label: 'Services'
-        }, {
-          value: 'Works',
-          label: 'Works'
-        }, {
-          value: 'Consultancy',
-          label: 'Consultancy'
-        }]} value={categoryFilter} onChange={e => setCategoryFilter(e.target.value)} />
+        }, ...categories.map(c => ({ value: c.name, label: c.name }))]} value={categoryFilter} onChange={e => setCategoryFilter(e.target.value)} />
         </div>
       </div>
 
@@ -291,7 +312,20 @@ export function RecordsPage() {
                       {record.awardedTo || '-'}
                     </td>
                     <td className="px-4 py-3 text-slate-700 whitespace-nowrap">
-                      {record.delay !== undefined ? `${record.delay} days` : '-'}
+                      {(() => {
+                        if (record.status === 'Awarded') {
+                          return record.delay !== undefined ? `${record.delay} days` : '-';
+                        }
+                        if (record.fileSentToTecDate) {
+                          const sentDate = new Date(record.fileSentToTecDate);
+                          if (!isNaN(sentDate.getTime())) {
+                            const diffTime = new Date().getTime() - sentDate.getTime();
+                            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+                            return `${diffDays > 0 ? diffDays : 0} days`;
+                          }
+                        }
+                        return '-';
+                      })()}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap sticky right-0 z-10 bg-white group-hover:bg-slate-50 shadow-[-4px_0_12px_-4px_rgba(0,0,0,0.1)] transition-colors">
                       <div className="flex items-center gap-2">
