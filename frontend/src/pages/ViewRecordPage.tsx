@@ -126,14 +126,6 @@ export function ViewRecordPage() {
                 {record.status}
               </span>
             </div>
-            <div className="flex flex-wrap items-center gap-x-4 mt-1 text-slate-500 font-medium text-xs">
-              <span className="flex items-center gap-1">
-                <Tag className="w-3.5 h-3.5" /> {record.category}
-              </span>
-              <span className="flex items-center gap-1">
-                <Building2 className="w-3.5 h-3.5" /> {record.relevantTo}
-              </span>
-            </div>
           </div>
         </div>
         
@@ -156,15 +148,19 @@ export function ViewRecordPage() {
           
           {/* Main Info Column */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Description Card */}
-            <div className="bg-white rounded-xl border border-slate-200 p-6">
-              <div className="flex items-center gap-2 mb-4">
-                <ClipboardList className="w-4 h-4 text-slate-400" />
-                <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">Description</h3>
+            {/* Description and Classification Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="md:col-span-2 bg-white rounded-xl border border-slate-200 p-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <ClipboardList className="w-4 h-4 text-slate-400" />
+                  <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">Description</h3>
+                </div>
+                <p className="text-slate-700 leading-relaxed font-medium">
+                  {record.description || 'No description provided.'}
+                </p>
               </div>
-              <p className="text-slate-700 leading-relaxed font-medium">
-                {record.description || 'No description provided.'}
-              </p>
+              <StatCard label="Category" value={record.category} icon={Tag} />
+              <StatCard label="Department" value={record.relevantTo} icon={Building2} />
             </div>
 
             {/* Quick Stats */}

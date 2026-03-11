@@ -166,7 +166,7 @@ export function AuditLogPage() {
                       {log.timestamp}
                     </td>
                     <td className="px-6 py-4 text-slate-500 whitespace-nowrap font-mono text-xs">
-                      {log.ipAddress}
+                      {log.ipAddress ? `fo ${log.ipAddress.replace('::ffff:', '')}` : 'fo —'}
                     </td>
                   </tr>) : <tr>
                   <td colSpan={5} className="px-6 py-12 text-center text-slate-500">
